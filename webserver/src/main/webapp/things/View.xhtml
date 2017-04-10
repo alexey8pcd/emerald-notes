@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="ThingsViewDlg" widgetVar="ThingsViewDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewThingsTitle}">
+            <h:form id="ThingsViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{thingsController.selected != null}">
+                        <h:outputText value="#{bundle.ViewThingsLabel_idThing}"/>
+                        <h:outputText value="#{thingsController.selected.idThing}" title="#{bundle.ViewThingsTitle_idThing}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_name}"/>
+                        <h:outputText value="#{thingsController.selected.name}" title="#{bundle.ViewThingsTitle_name}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_description}"/>
+                        <h:outputText value="#{thingsController.selected.description}" title="#{bundle.ViewThingsTitle_description}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_idDangerForEnvironment}"/>
+                        <h:outputText value="#{thingsController.selected.idDangerForEnvironment}" title="#{bundle.ViewThingsTitle_idDangerForEnvironment}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_decompositionTime}"/>
+                        <h:outputText value="#{thingsController.selected.decompositionTime}" title="#{bundle.ViewThingsTitle_decompositionTime}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_idCategory}"/>
+                        <h:outputText value="#{thingsController.selected.idCategory}" title="#{bundle.ViewThingsTitle_idCategory}"/>
+                        <h:outputText value="#{bundle.ViewThingsLabel_idCountry}"/>
+                        <h:outputText value="#{thingsController.selected.idCountry}" title="#{bundle.ViewThingsTitle_idCountry}"/>
+                    </p:panelGrid>
+                    <p:commandButton value="#{bundle.Close}" onclick="ThingsViewDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

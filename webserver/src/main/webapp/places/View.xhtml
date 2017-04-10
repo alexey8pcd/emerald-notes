@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="PlacesViewDlg" widgetVar="PlacesViewDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewPlacesTitle}">
+            <h:form id="PlacesViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{placesController.selected != null}">
+                        <h:outputText value="#{bundle.ViewPlacesLabel_idPlace}"/>
+                        <h:outputText value="#{placesController.selected.idPlace}" title="#{bundle.ViewPlacesTitle_idPlace}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_description}"/>
+                        <h:outputText value="#{placesController.selected.description}" title="#{bundle.ViewPlacesTitle_description}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_latitude}"/>
+                        <h:outputText value="#{placesController.selected.latitude}" title="#{bundle.ViewPlacesTitle_latitude}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_longitude}"/>
+                        <h:outputText value="#{placesController.selected.longitude}" title="#{bundle.ViewPlacesTitle_longitude}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_address}"/>
+                        <h:outputText value="#{placesController.selected.address}" title="#{bundle.ViewPlacesTitle_address}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_dateCreate}"/>
+                        <h:outputText value="#{placesController.selected.dateCreate}" title="#{bundle.ViewPlacesTitle_dateCreate}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_idCountry}"/>
+                        <h:outputText value="#{placesController.selected.idCountry}" title="#{bundle.ViewPlacesTitle_idCountry}"/>
+                        <h:outputText value="#{bundle.ViewPlacesLabel_idPlaceType}"/>
+                        <h:outputText value="#{placesController.selected.idPlaceType}" title="#{bundle.ViewPlacesTitle_idPlaceType}"/>
+                    </p:panelGrid>
+                    <p:commandButton value="#{bundle.Close}" onclick="PlacesViewDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

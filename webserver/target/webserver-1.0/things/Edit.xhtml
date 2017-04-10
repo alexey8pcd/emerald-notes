@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="ThingsEditDlg" widgetVar="ThingsEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditThingsTitle}">
+            <h:form id="ThingsEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{thingsController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditThingsLabel_idThing}" for="idThing" />
+                        <p:inputText id="idThing" value="#{thingsController.selected.idThing}" title="#{bundle.EditThingsTitle_idThing}" required="true" requiredMessage="#{bundle.EditThingsRequiredMessage_idThing}"/>
+                        <p:outputLabel value="#{bundle.EditThingsLabel_name}" for="name" />
+                        <p:inputText id="name" value="#{thingsController.selected.name}" title="#{bundle.EditThingsTitle_name}" required="true" requiredMessage="#{bundle.EditThingsRequiredMessage_name}"/>
+                        <p:outputLabel value="#{bundle.EditThingsLabel_description}" for="description" />
+                        <p:inputText id="description" value="#{thingsController.selected.description}" title="#{bundle.EditThingsTitle_description}" required="true" requiredMessage="#{bundle.EditThingsRequiredMessage_description}"/>
+                        <p:outputLabel value="#{bundle.EditThingsLabel_idDangerForEnvironment}" for="idDangerForEnvironment" />
+                        <p:inputText id="idDangerForEnvironment" value="#{thingsController.selected.idDangerForEnvironment}" title="#{bundle.EditThingsTitle_idDangerForEnvironment}" required="true" requiredMessage="#{bundle.EditThingsRequiredMessage_idDangerForEnvironment}"/>
+                        <p:outputLabel value="#{bundle.EditThingsLabel_decompositionTime}" for="decompositionTime" />
+                        <p:inputText id="decompositionTime" value="#{thingsController.selected.decompositionTime}" title="#{bundle.EditThingsTitle_decompositionTime}" />
+                        <p:outputLabel value="#{bundle.EditThingsLabel_idCategory}" for="idCategory" />
+                        <p:selectOneMenu id="idCategory" value="#{thingsController.selected.idCategory}" required="true" requiredMessage="#{bundle.EditThingsRequiredMessage_idCategory}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{categoriesOfThingsController.itemsAvailableSelectOne}"
+                                           var="idCategoryItem"
+                                           itemValue="#{idCategoryItem}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.EditThingsLabel_idCountry}" for="idCountry" />
+                        <p:selectOneMenu id="idCountry" value="#{thingsController.selected.idCountry}" >
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{countriesController.itemsAvailableSelectOne}"
+                                           var="idCountryItem"
+                                           itemValue="#{idCountryItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{thingsController.update}" value="#{bundle.Save}" update="display,:ThingsListForm:datalist,:growl" oncomplete="handleSubmit(args, 'ThingsEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="ThingsEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

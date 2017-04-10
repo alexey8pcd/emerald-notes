@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="CategoriesOfThingsEditDlg" widgetVar="CategoriesOfThingsEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditCategoriesOfThingsTitle}">
+            <h:form id="CategoriesOfThingsEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{categoriesOfThingsController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditCategoriesOfThingsLabel_idCategory}" for="idCategory" />
+                        <p:inputText id="idCategory" value="#{categoriesOfThingsController.selected.idCategory}" title="#{bundle.EditCategoriesOfThingsTitle_idCategory}" required="true" requiredMessage="#{bundle.EditCategoriesOfThingsRequiredMessage_idCategory}"/>
+                        <p:outputLabel value="#{bundle.EditCategoriesOfThingsLabel_category}" for="category" />
+                        <p:inputText id="category" value="#{categoriesOfThingsController.selected.category}" title="#{bundle.EditCategoriesOfThingsTitle_category}" required="true" requiredMessage="#{bundle.EditCategoriesOfThingsRequiredMessage_category}"/>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{categoriesOfThingsController.update}" value="#{bundle.Save}" update="display,:CategoriesOfThingsListForm:datalist,:growl" oncomplete="handleSubmit(args, 'CategoriesOfThingsEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="CategoriesOfThingsEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

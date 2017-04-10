@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="PlacesEditDlg" widgetVar="PlacesEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditPlacesTitle}">
+            <h:form id="PlacesEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{placesController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_idPlace}" for="idPlace" />
+                        <p:inputText id="idPlace" value="#{placesController.selected.idPlace}" title="#{bundle.EditPlacesTitle_idPlace}" required="true" requiredMessage="#{bundle.EditPlacesRequiredMessage_idPlace}"/>
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_description}" for="description" />
+                        <p:inputText id="description" value="#{placesController.selected.description}" title="#{bundle.EditPlacesTitle_description}" />
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_latitude}" for="latitude" />
+                        <p:inputText id="latitude" value="#{placesController.selected.latitude}" title="#{bundle.EditPlacesTitle_latitude}" />
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_longitude}" for="longitude" />
+                        <p:inputText id="longitude" value="#{placesController.selected.longitude}" title="#{bundle.EditPlacesTitle_longitude}" />
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_address}" for="address" />
+                        <p:inputText id="address" value="#{placesController.selected.address}" title="#{bundle.EditPlacesTitle_address}" />
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_dateCreate}" for="dateCreate" />
+                        <p:calendar id="dateCreate" pattern="MM/dd/yyyy HH:mm:ss" value="#{placesController.selected.dateCreate}" title="#{bundle.EditPlacesTitle_dateCreate}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_idCountry}" for="idCountry" />
+                        <p:selectOneMenu id="idCountry" value="#{placesController.selected.idCountry}" >
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{countriesController.itemsAvailableSelectOne}"
+                                           var="idCountryItem"
+                                           itemValue="#{idCountryItem}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.EditPlacesLabel_idPlaceType}" for="idPlaceType" />
+                        <p:selectOneMenu id="idPlaceType" value="#{placesController.selected.idPlaceType}" required="true" requiredMessage="#{bundle.EditPlacesRequiredMessage_idPlaceType}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{placeTypesController.itemsAvailableSelectOne}"
+                                           var="idPlaceTypeItem"
+                                           itemValue="#{idPlaceTypeItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{placesController.update}" value="#{bundle.Save}" update="display,:PlacesListForm:datalist,:growl" oncomplete="handleSubmit(args, 'PlacesEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="PlacesEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>
