@@ -19,7 +19,7 @@ public class PlacesListActivity extends Activity {
 
     private int placeTypeId;
     private ListView lvPlaces;
-    private DbHelper dbHelper = DbHelper.getInstance();
+    private DbHelper dbHelper;
     private List<Place> places;
 
     @Override
@@ -30,6 +30,7 @@ public class PlacesListActivity extends Activity {
         placeTypeId = intent.getIntExtra(Commons.PLACE_TYPE_ID, -1);
         Toast.makeText(this, String.valueOf(placeTypeId), Toast.LENGTH_SHORT).show();
         lvPlaces = (ListView) findViewById(R.id.aPlacesList_lvPlaces);
+        dbHelper = new DbHelper(getApplicationContext());
         places = dbHelper.getPlacesByType(placeTypeId);
         String[] placeAddresses = Commons.listToStringArray(places, new Mapper<Place>() {
             @Override

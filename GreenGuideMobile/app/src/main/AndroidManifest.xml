@@ -21,6 +21,8 @@
         </activity>
         <activity android:name=".activities.PlacesListActivity">
         </activity>
+        <activity android:name=".activities.DialogActivity">
+        </activity>
     </application>
 
 </manifest>

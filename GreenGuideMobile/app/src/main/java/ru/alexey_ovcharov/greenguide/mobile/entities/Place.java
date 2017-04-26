@@ -1,6 +1,8 @@
 package ru.alexey_ovcharov.greenguide.mobile.entities;
 
 
+import java.sql.Timestamp;
+
 /**
  * Created by Алексей on 23.04.2017.
  */
@@ -8,9 +10,38 @@ package ru.alexey_ovcharov.greenguide.mobile.entities;
 public class Place {
     private int idPlace;
     private String description;
+    private double latitude;
+    private double longitude;
     private String address;
-    private int idCountry;
+    private Timestamp dateCreate;
     private int idPlaceType;
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Timestamp getDateCreate() {
+        return dateCreate;
+    }
+
+    public void setDateCreate(Timestamp dateCreate) {
+        this.dateCreate = dateCreate;
+    }
+
+    private int idCountry;
+
 
     public Place() {
 

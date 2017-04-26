@@ -32,7 +32,7 @@ public class PlacesCategoriesActivity extends Activity {
     }
 
     private ListView lvPlaceTypes;
-    private DbHelper dbHelper = DbHelper.getInstance();
+    private DbHelper dbHelper;
     private List<PlaceType> placeTypes;
 
     @Override
@@ -40,6 +40,7 @@ public class PlacesCategoriesActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places_categories);
         lvPlaceTypes = (ListView)findViewById(R.id.aPlacesCategories_lvCategories);
+        dbHelper = new DbHelper(getApplicationContext());
         placeTypes = dbHelper.getPlacesTypes();
         String[] placeTypeNames = Commons.listToStringArray(placeTypes, new Mapper<PlaceType>() {
             @Override
