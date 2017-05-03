@@ -1,10 +1,11 @@
-package ru.alexey_ovcharov.greenguide.mobile.entities;
+package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 /**
  * Created by Алексей on 25.04.2017.
  */
 @Entity
 public class CategoryOfThing {
+
     public static final String TABLE_NAME = "categories_of_things";
     public static final String ID_CATEGORY_COLUMN = "id_category";
     public static final String CATEGORY_COLUMN = "category";
@@ -34,4 +35,5 @@ public class CategoryOfThing {
     public void setCategory(String category) {
         this.category = category;
     }
+
 }

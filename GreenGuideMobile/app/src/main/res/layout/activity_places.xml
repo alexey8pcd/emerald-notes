@@ -79,14 +79,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.15"
-                android:text="Добавить место"/>
+                android:text="Добавить место..."/>
 
             <Button
                 android:id="@+id/aPlaces_bNewCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.15"
-                android:text="Новая категория"/>
+                android:text="Новая категория мест..."/>
 
             <Button
                 android:id="@+id/aPlaces_buttonUpdateAll"

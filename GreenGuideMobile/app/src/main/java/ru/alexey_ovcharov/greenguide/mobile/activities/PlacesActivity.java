@@ -9,8 +9,9 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
-import ru.alexey_ovcharov.greenguide.mobile.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
+import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 
 public class PlacesActivity extends Activity {
 
@@ -63,11 +64,15 @@ public class PlacesActivity extends Activity {
 
 
     private void saveCategory(final String categoryName) {
-        AsyncTask<Void, Void, Boolean> asyncTask = new AsyncTask<Void, Void, Boolean>() {
+        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
             @Override
-            protected Boolean doInBackground(Void... params) {
-                boolean result = dbHelper.addPlaceType(categoryName);
-                return result;
+            protected Void doInBackground(Void... params) {
+                try {
+                    dbHelper.addPlaceType(categoryName);
+                } catch (PersistenceException e) {
+                    e.log();
+                }
+                return null;
             }
         }.execute();
     }

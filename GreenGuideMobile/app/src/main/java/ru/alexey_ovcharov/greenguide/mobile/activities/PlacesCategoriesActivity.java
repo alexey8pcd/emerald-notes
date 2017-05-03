@@ -12,10 +12,10 @@ import android.widget.ListView;
 import java.util.List;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
-import ru.alexey_ovcharov.greenguide.mobile.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.Mapper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
-import ru.alexey_ovcharov.greenguide.mobile.entities.PlaceType;
+import ru.alexey_ovcharov.greenguide.mobile.persist.PlaceType;
 
 public class PlacesCategoriesActivity extends Activity {
 
@@ -23,9 +23,12 @@ public class PlacesCategoriesActivity extends Activity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             if(placeTypes != null && position >= 0 && position < placeTypes.size()){
-                int idPlaceType = placeTypes.get(position).getIdPlaceType();
-                Intent intent = new Intent(PlacesCategoriesActivity.this, PlacesListActivity.class);
-                intent.putExtra(Commons.PLACE_TYPE_ID, idPlaceType);
+                PlaceType placeType = placeTypes.get(position);
+                int idPlaceType = placeType.getIdPlaceType();
+                String placeTypeName = placeType.getType();
+                Intent intent = new Intent(PlacesCategoriesActivity.this, PlacesListInChoosenCategoryActivity.class);
+                intent.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
+                intent.putExtra(PlaceType.TYPE_COLUMN, placeTypeName);
                 startActivity(intent);
             }
         }
