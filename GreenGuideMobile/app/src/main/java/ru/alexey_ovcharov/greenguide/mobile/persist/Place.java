@@ -1,12 +1,19 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +24,10 @@ import ru.alexey_ovcharov.greenguide.mobile.Commons;
  */
 @Entity
 public class Place {
+
+    public static final String URL_PREFIX = "URL:";
+    public static final String DATA_PREFIX = "Data:";
+    private Collection<? extends Bitmap> images;
 
     @Override
     public String toString() {
@@ -81,11 +92,11 @@ public class Place {
 
     public void addImageUrl(String imageUrl) {
 
-        imagesInfo.add("URL:" + imageUrl);
+        imagesInfo.add(URL_PREFIX + imageUrl);
     }
 
-    public void addImageBytes(byte[] bytes){
-        imagesInfo.add("Data:"+ Base64.encodeToString(bytes, Base64.DEFAULT));
+    public void addImageBytes(byte[] bytes) {
+        imagesInfo.add(DATA_PREFIX + Base64.encodeToString(bytes, Base64.DEFAULT));
     }
 
     private List<String> imagesInfo = new ArrayList<>(1);
@@ -165,4 +176,31 @@ public class Place {
     public void setIdPlaceType(int idPlaceType) {
         this.idPlaceType = idPlaceType;
     }
+
+    public void addImageInfo(String imageInfo) {
+        if (imageInfo != null && (imageInfo.startsWith(URL_PREFIX)
+                || imageInfo.startsWith(DATA_PREFIX))) {
+            this.imagesInfo.add(imageInfo);
+        }
+    }
+
+    public List<Bitmap> getImages(Context context) throws FileNotFoundException {
+        List<Bitmap> bitmaps = new ArrayList<>(imagesInfo.size());
+        for (String info : imagesInfo) {
+            if (info.startsWith(URL_PREFIX)) {
+                String uriStr = info.substring(URL_PREFIX.length());
+                Uri imageUrl = Uri.parse(uriStr);
+                InputStream inputStream = context.getContentResolver().openInputStream(imageUrl);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                bitmaps.add(bitmap);
+            } else if (info.startsWith(DATA_PREFIX)) {
+                String data = info.substring(DATA_PREFIX.length());
+                byte[] decodedImage = Base64.decode(data, Base64.DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+                bitmaps.add(bitmap);
+            }
+        }
+        return bitmaps;
+    }
+
 }

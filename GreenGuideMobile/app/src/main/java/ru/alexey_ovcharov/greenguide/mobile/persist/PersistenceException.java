@@ -18,6 +18,10 @@ public class PersistenceException extends Exception {
         super(message, cause);
     }
 
+    public PersistenceException(String message) {
+        super(message);
+    }
+
     public void log() {
         Log.e(Commons.APP_NAME, toString(), this);
     }

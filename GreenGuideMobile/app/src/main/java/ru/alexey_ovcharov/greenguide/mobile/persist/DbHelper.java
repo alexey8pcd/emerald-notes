@@ -3,12 +3,14 @@ package ru.alexey_ovcharov.greenguide.mobile.persist;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +24,7 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 public class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "green_guide_db";
-    private static final int VERSION = 6;
+    private static final int VERSION = 7;
     public static final int ROW_NOT_INSERTED = -1;
 
     public DbHelper(Context context) {
@@ -104,7 +106,33 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-    public List<Place> getPlacesByType(int placeTypeId) {
+    public List<Place> getPlacesByTypeWithImages(int placeTypeId) throws PersistenceException {
+        List<Place> places = getPlacesByTypeWithoutImages(placeTypeId);
+        Log.d(APP_NAME, "Выбираю связанные изображения для мест");
+        try {
+            int index = 0;
+            for (Place place : places) {
+                SQLiteDatabase database = getReadableDatabase();
+                Cursor cursor = database.rawQuery("select image " +
+                        "from images_for_place where id_place = " + place.getIdPlace(), null);
+                if (cursor.moveToFirst()) {
+                    do {
+                        String imageData = cursor.getString(cursor.getColumnIndex(Place.IMAGE_COLUMN));
+                        ++index;
+                        place.addImageInfo(imageData);
+                    } while (cursor.moveToNext());
+                }
+            }
+            Log.d(APP_NAME, "Готово, добавлено изображений: " + index);
+        } catch (Exception e) {
+            throw new PersistenceException("Ошибка при получении мест", e);
+        }
+
+        return places;
+    }
+
+    @NonNull
+    public List<Place> getPlacesByTypeWithoutImages(int placeTypeId) throws PersistenceException {
         Log.d(APP_NAME, "Выбираю места из базы");
         List<Place> places = Collections.EMPTY_LIST;
         try {
@@ -114,49 +142,76 @@ public class DbHelper extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 places = new ArrayList<>();
                 do {
-                    Place place = new Place();
-                    int columnIndexAddress = cursor.getColumnIndex(Place.ADDRESS_COLUMN);
-                    String address = cursor.getString(columnIndexAddress);
-                    if (!"null".equals(address)) {
-                        place.setAddress(address);
-                    }
-                    String description = cursor.getString(cursor.getColumnIndex(Place.DESCRIPTION_COLUMN));
-                    place.setDescription(description);
-                    String dateCreate = cursor.getString(cursor.getColumnIndex(Place.DATE_CREATE_COLUMN));
-                    place.setDateCreate(dateCreate);
-                    int columnIndexCountry = cursor.getColumnIndex(Place.ID_COUNTRY_COLUMN);
-                    Integer idCountry = cursor.getInt(columnIndexCountry);
-                    if (cursor.isNull(columnIndexCountry)) {
-                        idCountry = null;
-                    }
-                    place.setIdCountry(idCountry);
-
-                    BigDecimal latitude;
-                    int columnIndexLatitude = cursor.getColumnIndex(Place.LATITUDE_COLUMN);
-                    if (cursor.isNull(columnIndexLatitude)) {
-                        latitude = null;
-                    } else {
-                        latitude = new BigDecimal(cursor.getString(columnIndexLatitude));
-                    }
-                    place.setLatitude(latitude);
-
-                    BigDecimal longitude;
-                    int columnIndexLongitude = cursor.getColumnIndex(Place.LONGITUDE_COLUMN);
-                    if (cursor.isNull(columnIndexLongitude)) {
-                        longitude = null;
-                    } else {
-                        longitude = new BigDecimal(cursor.getString(columnIndexLongitude));
-                    }
-                    place.setLatitude(longitude);
-
+                    Place place = selectPlace(cursor);
                     places.add(place);
                 } while (cursor.moveToNext());
             }
             Log.d(APP_NAME, "Выбрано мест: " + places.size());
         } catch (Exception e) {
-            Log.e(APP_NAME, e.toString(), e);
+            throw new PersistenceException("Ошибка при получении мест", e);
         }
         return places;
+    }
+
+    public int getPlacesCount() throws PersistenceException {
+        Log.d(APP_NAME, "Выполняю получение количество мест в базе");
+        try {
+            int placesCount;
+            SQLiteDatabase database = getReadableDatabase();
+            try (Cursor cursor = database.rawQuery("select count(*) as places_count from " + Place.TABLE_NAME, null)) {
+                if (cursor.moveToFirst()) {
+                    return cursor.getInt(cursor.getColumnIndex("places_count"));
+                } else {
+                    throw new SQLException("Ошибка при получении количества мест в базе");
+                }
+            }
+        } catch (Exception e) {
+            throw new PersistenceException("Не удалось получить количество мест ", e);
+        }
+    }
+
+    @NonNull
+    private Place selectPlace(Cursor cursor) throws ParseException {
+        Place place = new Place();
+        int placeTypeId = cursor.getInt(cursor.getColumnIndex(Place.ID_PLACE_TYPE_COLUMN));
+        place.setIdPlaceType(placeTypeId);
+        int placeId = cursor.getInt(cursor.getColumnIndex(Place.ID_PLACE_COLUMN));
+        place.setIdPlace(placeId);
+
+        int columnIndexAddress = cursor.getColumnIndex(Place.ADDRESS_COLUMN);
+        String address = cursor.getString(columnIndexAddress);
+        if (!"null".equals(address)) {
+            place.setAddress(address);
+        }
+        String description = cursor.getString(cursor.getColumnIndex(Place.DESCRIPTION_COLUMN));
+        place.setDescription(description);
+        String dateCreate = cursor.getString(cursor.getColumnIndex(Place.DATE_CREATE_COLUMN));
+        place.setDateCreate(dateCreate);
+        int columnIndexCountry = cursor.getColumnIndex(Place.ID_COUNTRY_COLUMN);
+        Integer idCountry = cursor.getInt(columnIndexCountry);
+        if (cursor.isNull(columnIndexCountry)) {
+            idCountry = null;
+        }
+        place.setIdCountry(idCountry);
+
+        BigDecimal latitude;
+        int columnIndexLatitude = cursor.getColumnIndex(Place.LATITUDE_COLUMN);
+        if (cursor.isNull(columnIndexLatitude)) {
+            latitude = null;
+        } else {
+            latitude = new BigDecimal(cursor.getString(columnIndexLatitude));
+        }
+        place.setLatitude(latitude);
+
+        BigDecimal longitude;
+        int columnIndexLongitude = cursor.getColumnIndex(Place.LONGITUDE_COLUMN);
+        if (cursor.isNull(columnIndexLongitude)) {
+            longitude = null;
+        } else {
+            longitude = new BigDecimal(cursor.getString(columnIndexLongitude));
+        }
+        place.setLatitude(longitude);
+        return place;
     }
 
     public void addPlace(Place place) throws PersistenceException {
@@ -214,6 +269,34 @@ public class DbHelper extends SQLiteOpenHelper {
             Log.d(APP_NAME, "Ид созданной строки: " + l);
         } catch (Exception e) {
             throw new PersistenceException("Не удалось добавить категорию вещей", e);
+        }
+    }
+
+    public Place getPlaceWithImages(int placeId) throws PersistenceException {
+        Log.d(APP_NAME, "Выбираю место с изображениями, ид: " + placeId);
+        try {
+            SQLiteDatabase database = getReadableDatabase();
+            try (Cursor cursorPlace = database.rawQuery("select *" +
+                    " from places where id_place = " + placeId, null)) {
+                if (cursorPlace.moveToFirst()) {
+                    Place place = selectPlace(cursorPlace);
+                    try (Cursor cursorImages = database.rawQuery("select image " +
+                            "from images_for_place where id_place = " + placeId, null)) {
+                        if (cursorImages.moveToFirst()) {
+                            do {
+                                String imageInfo = cursorImages.getString(cursorImages.getColumnIndex(Place.IMAGE_COLUMN));
+                                place.addImageInfo(imageInfo);
+                            } while (cursorImages.moveToNext());
+                        }
+                    }
+                    Log.d(APP_NAME, "Выбрано изображений: " + place.getImagesInfo().size());
+                    return place;
+                } else {
+                    throw new PersistenceException("Не найдено место с ид: " + placeId);
+                }
+            }
+        } catch (Exception e) {
+            throw new PersistenceException("Не удалось получить информацию для места с ид: " + placeId, e);
         }
     }
 }

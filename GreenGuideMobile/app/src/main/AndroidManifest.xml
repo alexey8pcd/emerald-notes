@@ -2,6 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="ru.alexey_ovcharov.greenguide.mobile">
 
+    <permission
+        android:name="android.permission.CAMERA"
+        android:label="Камера"/>
+
+    <permission
+        android:name="android.permission.INTERNET"
+        android:label="Доступ в Интернет"/>
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -24,6 +35,11 @@
         <activity android:name=".activities.DialogActivity">
         </activity>
         <activity android:name=".activities.AddPlaceActivity">
+        </activity>
+        <activity
+            android:name=".activities.ShowPlaceActivity"
+            android:label="@string/title_activity_show_place"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
 

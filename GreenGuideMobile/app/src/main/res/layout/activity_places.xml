@@ -41,10 +41,9 @@
                 android:id="@+id/aPlaces_tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
+                android:text="Места"
                 android:textAlignment="center"
-                android:textSize="24sp"
-                tools:text="Места"/>
+                android:textSize="24sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -68,37 +67,31 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/aPlaces_textViewEmpty"
+                android:id="@+id/aPlaces_tvPlacesInfo"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="0.15"
-                android:text=""/>
-
-            <Button
-                android:id="@+id/aPlaces_buttonAddPlace"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.15"
-                android:text="Добавить место..."/>
+                android:text="Всего мест в базе: выполняется получение данных..."
+                android:textAlignment="center"/>
 
             <Button
                 android:id="@+id/aPlaces_bNewCategory"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="0.15"
                 android:text="Новая категория мест..."/>
 
             <Button
                 android:id="@+id/aPlaces_buttonUpdateAll"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="0.15"
                 android:text="Обновить все"/>
 
             <Button
                 android:id="@+id/aPlaces_buttonPublicAll"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="0.15"
                 android:text="Опубликовать все"/>
         </LinearLayout>

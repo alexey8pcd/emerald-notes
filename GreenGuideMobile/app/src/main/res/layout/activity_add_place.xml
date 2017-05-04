@@ -38,7 +38,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.16"
             android:ems="10"
-            android:hint="Описание"/>
+            android:hint="Описание"
+            android:inputType="textShortMessage"/>
 
         <CheckBox
             android:id="@+id/aAddPlace_cbSaveAddress"
@@ -108,7 +109,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Указать координаты"/>
+            android:text="Указать координаты(для автоматического получения координат должна быть включена геолокация)"
+            android:textSize="10sp"/>
 
         <LinearLayout
             android:layout_width="match_parent"

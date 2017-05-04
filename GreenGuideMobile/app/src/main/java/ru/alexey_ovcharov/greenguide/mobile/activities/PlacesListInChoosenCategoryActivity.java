@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -43,7 +44,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places_list);
-        Intent intent = getIntent();
+        final Intent intent = getIntent();
         dbHelper = new DbHelper(getApplicationContext());
 
         String placeTypeName = intent.getStringExtra(PlaceType.TYPE_COLUMN);
@@ -51,6 +52,14 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
         tvTitle.setText("Просмотр мест в категории " + placeTypeName);
 
         lvPlaces = (ListView) findViewById(R.id.aPlacesList_lvPlaces);
+        lvPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent showPlaceIntent = new Intent(PlacesListInChoosenCategoryActivity.this, ShowPlaceActivity.class);
+                showPlaceIntent.putExtra(Commons.PLACE_ID, places.get(position).getIdPlace());
+                startActivity(showPlaceIntent);
+            }
+        });
         placeTypeId = intent.getIntExtra(PlaceType.ID_PLACE_TYPE_COLUMN, -1);
         updatePlacesList();
 
@@ -60,7 +69,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
 
     private void updatePlacesList() {
         try {
-            places = dbHelper.getPlacesByType(placeTypeId);
+            places = dbHelper.getPlacesByTypeWithoutImages(placeTypeId);
             String[] placeAddresses = Commons.listToStringArray(places, new Mapper<Place>() {
                 @Override
                 public String map(Place item) {
