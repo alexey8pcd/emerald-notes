@@ -1,5 +1,8 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Created by Алексей on 23.04.2017.
  */
@@ -40,4 +43,10 @@ public class PlaceType {
         this.type = type;
     }
 
+    public JSONObject toJSONObject() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
+        jsonObject.put(PlaceType.TYPE_COLUMN, type);
+        return jsonObject;
+    }
 }

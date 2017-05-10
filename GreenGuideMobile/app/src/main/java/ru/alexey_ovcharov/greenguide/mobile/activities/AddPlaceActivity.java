@@ -199,7 +199,8 @@ public class AddPlaceActivity extends Activity {
                 if (Commons.isNotEmpty(selectedImageURI)) {
                     place.addImageUrl(selectedImageURI);
                 } else if (imageBytes != null) {
-                    place.addImageBytes(imageBytes);
+                    long idImage = dbHelper.addImage(imageBytes);
+                    place.addImageId(idImage);
                 } else {
                     Toast.makeText(getApplicationContext(), "Не выбрано изображение", Toast.LENGTH_SHORT).show();
                     return;

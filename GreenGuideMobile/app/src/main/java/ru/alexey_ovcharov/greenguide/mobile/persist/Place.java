@@ -7,6 +7,10 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Base64;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -16,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 
@@ -26,7 +31,7 @@ import ru.alexey_ovcharov.greenguide.mobile.Commons;
 public class Place {
 
     public static final String URL_PREFIX = "URL:";
-    public static final String DATA_PREFIX = "Data:";
+    public static final String ID_PREFIX = "ID:";
     private Collection<? extends Bitmap> images;
 
     @Override
@@ -37,9 +42,10 @@ public class Place {
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", address='" + address + '\'' +
-                ", dateCreate=" + dateCreate +
+                ", dateCreate='" + dateCreate + '\'' +
                 ", idPlaceType=" + idPlaceType +
                 ", idCountry=" + idCountry +
+                ", imagesInfo=" + imagesInfo +
                 '}';
     }
 
@@ -95,8 +101,8 @@ public class Place {
         imagesInfo.add(URL_PREFIX + imageUrl);
     }
 
-    public void addImageBytes(byte[] bytes) {
-        imagesInfo.add(DATA_PREFIX + Base64.encodeToString(bytes, Base64.DEFAULT));
+    public void addImageId(long idImage) {
+        imagesInfo.add(ID_PREFIX + idImage);
     }
 
     private List<String> imagesInfo = new ArrayList<>(1);
@@ -179,28 +185,27 @@ public class Place {
 
     public void addImageInfo(String imageInfo) {
         if (imageInfo != null && (imageInfo.startsWith(URL_PREFIX)
-                || imageInfo.startsWith(DATA_PREFIX))) {
+                || imageInfo.startsWith(ID_PREFIX))) {
             this.imagesInfo.add(imageInfo);
         }
     }
 
-    public List<Bitmap> getImages(Context context) throws FileNotFoundException {
-        List<Bitmap> bitmaps = new ArrayList<>(imagesInfo.size());
-        for (String info : imagesInfo) {
-            if (info.startsWith(URL_PREFIX)) {
-                String uriStr = info.substring(URL_PREFIX.length());
-                Uri imageUrl = Uri.parse(uriStr);
-                InputStream inputStream = context.getContentResolver().openInputStream(imageUrl);
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                bitmaps.add(bitmap);
-            } else if (info.startsWith(DATA_PREFIX)) {
-                String data = info.substring(DATA_PREFIX.length());
-                byte[] decodedImage = Base64.decode(data, Base64.DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
-                bitmaps.add(bitmap);
-            }
-        }
-        return bitmaps;
-    }
+    public JSONObject toJsonObject(Map<Integer, String> countries, Context context)
+            throws JSONException, FileNotFoundException {
 
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(DESCRIPTION_COLUMN, description);
+        jsonObject.put(ADDRESS_COLUMN, address);
+        jsonObject.put(Country.COUNTRY_COLUMN, countries.get(idCountry));
+        jsonObject.put(LATITUDE_COLUMN, latitude);
+        jsonObject.put(LONGITUDE_COLUMN, longitude);
+        jsonObject.put(DATE_CREATE_COLUMN, dateCreate);
+        jsonObject.put(ID_PLACE_TYPE_COLUMN, idPlaceType);
+        JSONArray imagesJsonArray = new JSONArray();
+        for (String imageId : imagesInfo) {
+            imagesJsonArray.put(imageId);
+        }
+        jsonObject.put("images", imagesJsonArray);
+        return jsonObject;
+    }
 }

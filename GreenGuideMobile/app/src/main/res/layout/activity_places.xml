@@ -89,7 +89,7 @@
                 android:text="Обновить все"/>
 
             <Button
-                android:id="@+id/aPlaces_buttonPublicAll"
+                android:id="@+id/aPlaces_bPublicAll"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="0.15"

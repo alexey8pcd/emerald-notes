@@ -5,13 +5,13 @@
     <permission
         android:name="android.permission.CAMERA"
         android:label="Камера"/>
-
     <permission
         android:name="android.permission.INTERNET"
         android:label="Доступ в Интернет"/>
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -41,6 +41,14 @@
             android:label="@string/title_activity_show_place"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
+        <activity android:name=".activities.SettingsActivity">
+        </activity>
+
+        <service
+            android:name=".services.PublicationService"
+            android:enabled="true"
+            android:exported="true">
+        </service>
     </application>
 
 </manifest>

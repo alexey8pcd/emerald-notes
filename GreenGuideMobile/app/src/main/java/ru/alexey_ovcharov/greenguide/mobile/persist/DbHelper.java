@@ -7,13 +7,19 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
@@ -24,18 +30,27 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 public class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "green_guide_db";
-    private static final int VERSION = 7;
+    private static final int VERSION = 12;
     public static final int ROW_NOT_INSERTED = -1;
+    public static final String SETTINGS_TABLE_NAME = "settings";
+    public static final String SETTINGS_TABLE_CREATE = "CREATE TABLE IF NOT EXISTS "
+            + SETTINGS_TABLE_NAME + "(name VARCHAR PRIMARY KEY NOT NULL UNIQUE, value TEXT)";
+    public static final String DATABASE_ID = "database_id";
 
     public DbHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
-        Log.d(APP_NAME, "new" + DbHelper.class.getSimpleName());
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(APP_NAME, "onCreate");
         try {
+            db.execSQL(SETTINGS_TABLE_CREATE);
+            db.execSQL("delete from " + SETTINGS_TABLE_NAME);
+            ContentValues values = new ContentValues();
+            values.put(DATABASE_ID, UUID.randomUUID().toString());
+            db.insert(SETTINGS_TABLE_NAME, null, values);
+            db.execSQL(Image.CREATE_SCRIPT);
             db.execSQL(Country.CREATE_SCRIPT);
             db.execSQL(CategoryOfThing.CREATE_SCRIPT);
             db.execSQL(PlaceType.CREATE_SCRIPT);
@@ -63,10 +78,45 @@ public class DbHelper extends SQLiteOpenHelper {
             db.execSQL(PlaceType.DROP_SCRIPT);
             db.execSQL(CategoryOfThing.DROP_SCRIPT);
             db.execSQL(Country.DROP_SCRIPT);
+            db.execSQL(Image.DROP_SCRIPT);
         } catch (Exception e) {
             Log.e(APP_NAME, e.toString(), e);
         }
         onCreate(db);
+    }
+
+    @Nullable
+    public String getSettingByName(String name) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
+            try (Cursor cursor = database.rawQuery("select value from " + SETTINGS_TABLE_NAME
+                    + " where name='" + name.replaceAll("'", "\"") + "'", null)) {
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(cursor.getColumnIndex("value"));
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(APP_NAME, ex.toString(), ex);
+        }
+        return null;
+    }
+
+    public void putSetting(String name, String value) {
+        try {
+            name = name.replaceAll("'", "\"");
+            value = value.replaceAll("'", "\"");
+            SQLiteDatabase database = getWritableDatabase();
+            ContentValues cv = new ContentValues();
+            cv.put("value", value);
+            if (getSettingByName(name) != null) {
+                int updatedRowsCount = database.update(SETTINGS_TABLE_NAME, cv, "name = ?", new String[]{name});
+            } else {
+                cv.put("name", name);
+                long insertRowId = database.insert(SETTINGS_TABLE_NAME, null, cv);
+            }
+        } catch (Exception ex) {
+            Log.e(APP_NAME, ex.toString(), ex);
+        }
     }
 
     @NonNull
@@ -106,6 +156,7 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    @NonNull
     public List<Place> getPlacesByTypeWithImages(int placeTypeId) throws PersistenceException {
         List<Place> places = getPlacesByTypeWithoutImages(placeTypeId);
         Log.d(APP_NAME, "Выбираю связанные изображения для мест");
@@ -167,6 +218,79 @@ public class DbHelper extends SQLiteOpenHelper {
             }
         } catch (Exception e) {
             throw new PersistenceException("Не удалось получить количество мест ", e);
+        }
+    }
+
+    public Map<Integer, String> getCountries() throws PersistenceException {
+        Log.d(APP_NAME, "Получаю список стран");
+        try {
+            Map<Integer, String> countries = new HashMap<>();
+            SQLiteDatabase database = getReadableDatabase();
+            Cursor cursor = database.rawQuery("select * from " + Country.TABLE_NAME, null);
+            if (cursor.moveToFirst()) {
+                do {
+                    String countryName = cursor.getString(cursor.getColumnIndex(Country.COUNTRY_COLUMN));
+                    int idCountry = cursor.getInt(cursor.getColumnIndex(Country.ID_COUNTRY_COLUMN));
+                    countries.put(idCountry, countryName);
+                } while (cursor.moveToNext());
+            }
+            Log.d(APP_NAME, "Найдено стран: " + countries.size());
+            return countries;
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось получить список стран", ex);
+        }
+    }
+
+    public long addImage(byte[] imageBytes) throws PersistenceException {
+        Log.d(APP_NAME, "Вставляю изображение, размер(байт):  " + imageBytes.length);
+        try {
+            SQLiteDatabase database = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(Image.BINARY_DATA_COLUMN, imageBytes);
+            long rowNum = database.insert(Image.TABLE_NAME, null, values);
+            if (rowNum != -1) {
+                Log.d(APP_NAME, "Изображение вставлено");
+            }
+            return rowNum;
+        } catch (Exception ex) {
+            throw new PersistenceException("Не вставить изображение", ex);
+        }
+    }
+
+    @NonNull
+    public List<Image> getImageData(List<String> idsImage) throws PersistenceException {
+        Log.d(APP_NAME, "Получаю данные изображения по ид: " + idsImage);
+        try {
+            SQLiteDatabase database = getReadableDatabase();
+            StringBuilder builder = new StringBuilder();
+            boolean first = true;
+            for (String idImage : idsImage) {
+                if (!first) {
+                    builder.append(",");
+                } else {
+                    first = false;
+                }
+                builder.append(idImage);
+            }
+            Cursor cursor = database.rawQuery("select * from "
+                    + Image.TABLE_NAME + " where "
+                    + Image.ID_IMAGE_COLUMN + " in (" + builder.toString() + ")", null);
+
+            List<Image> imageList = new ArrayList<>();
+            if (cursor.moveToFirst()) {
+                do {
+                    int idImage = cursor.getInt(cursor.getColumnIndex(Image.ID_IMAGE_COLUMN));
+                    byte[] imageData = cursor.getBlob(cursor.getColumnIndex(Image.BINARY_DATA_COLUMN));
+                    Image image = new Image();
+                    image.setIdImage(idImage);
+                    image.setBinaryData(imageData);
+                    imageList.add(image);
+                } while (cursor.moveToNext());
+            }
+            Log.d(APP_NAME, "Выбрано изображений: " + imageList.size());
+            return imageList;
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось получить изображения", ex);
         }
     }
 

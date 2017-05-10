@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
@@ -16,12 +18,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Place;
 
@@ -89,8 +94,29 @@ public class ShowPlaceActivity extends Activity {
     private List<Bitmap> loadImages() {
         if (placeWithImages != null) {
             try {
-                return placeWithImages.getImages(getApplicationContext());
-            } catch (FileNotFoundException e) {
+                List<String> imagesInfo = placeWithImages.getImagesInfo();
+                List<Bitmap> bitmaps = new ArrayList<>(imagesInfo.size());
+                List<String> imageIds = new ArrayList<>();
+                for (String info : imagesInfo) {
+                    if (info.startsWith(Place.URL_PREFIX)) {
+                        String uriStr = info.substring(Place.URL_PREFIX.length());
+                        Uri imageUrl = Uri.parse(uriStr);
+                        InputStream inputStream = getContentResolver().openInputStream(imageUrl);
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        bitmaps.add(bitmap);
+                    } else if (info.startsWith(Place.ID_PREFIX)) {
+                        String idImage = info.substring(Place.ID_PREFIX.length());
+                        imageIds.add(idImage);
+                    }
+                }
+                List<Image> imageList = dbHelper.getImageData(imageIds);
+                for (Image image : imageList) {
+                    byte[] binaryData = image.getBinaryData();
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length);
+                    bitmaps.add(bitmap);
+                }
+                return bitmaps;
+            } catch (Exception e) {
                 Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
             }
         }

@@ -1,7 +1,8 @@
 package ru.alexey_ovcharov.greenguide.mobile.activities;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,11 +15,12 @@ import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
+import ru.alexey_ovcharov.greenguide.mobile.services.PublicationService;
+
+import static ru.alexey_ovcharov.greenguide.mobile.Commons.SERVER_URL;
 
 public class PlacesActivity extends Activity {
 
-    private Button bShowList;
-    private Button bNewCategory;
     private DbHelper dbHelper;
     private TextView tvPlacesInfo;
     private static final int REQUEST_CODE_NEW_CATEGORY = 1;
@@ -28,7 +30,7 @@ public class PlacesActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places);
         dbHelper = new DbHelper(getApplicationContext());
-        bShowList = (Button) findViewById(R.id.aPlaces_bAsList);
+        Button bShowList = (Button) findViewById(R.id.aPlaces_bAsList);
         bShowList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -36,7 +38,7 @@ public class PlacesActivity extends Activity {
                 startActivity(intent);
             }
         });
-        bNewCategory = (Button) findViewById(R.id.aPlaces_bNewCategory);
+        Button bNewCategory = (Button) findViewById(R.id.aPlaces_bNewCategory);
         bNewCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -46,23 +48,67 @@ public class PlacesActivity extends Activity {
                 startActivityForResult(intent, REQUEST_CODE_NEW_CATEGORY);
             }
         });
+        Button bPublicAll = (Button) findViewById(R.id.aPlaces_bPublicAll);
+        bPublicAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
+                ad.setTitle("Разрешение на отправку");
+                ad.setMessage("Публикация информации о местах может потребовать передачи " +
+                        "большого объема данных на сервер, продолжить?");
+                ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        Toast.makeText(PlacesActivity.this, "Процесс отправки данных запущен",
+                                Toast.LENGTH_LONG).show();
+                        startPublicationService();
+                    }
+                });
+                ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        //ничего не делаем
+                    }
+                });
+                ad.show();
+
+            }
+        });
+        showPlacesCountFromDb();
+
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
-        AsyncTask<Void, Void, Void> placesInfoLoadTask = new AsyncTask<Void, Void, Void>() {
-            @SuppressWarnings("WrongThread")
+//        AsyncTask<Void, Void, Void> placesInfoLoadTask = new AsyncTask<Void, Void, Void>() {
+//            @SuppressWarnings("WrongThread")
+//            @Override
+//            protected Void doInBackground(Void... params) {
+//                int placesCount = 0;
+//                try {
+//                    placesCount = dbHelper.getPlacesCount();
+//                    String text = "Всего мест в базе: " + placesCount;
+//                    tvPlacesInfo.setText(text);
+//                } catch (PersistenceException e) {
+//                    tvPlacesInfo.setText("Не удалсь получить количество мест из базы");
+//                    e.log();
+//                }
+//                return null;
+//            }
+//        }.execute();
+    }
+
+    private void showPlacesCountFromDb() {
+        new AsyncTask<Void, Void, Void>() {
+
             @Override
             protected Void doInBackground(Void... params) {
-                int placesCount = 0;
-                try {
-                    placesCount = dbHelper.getPlacesCount();
-                    String text = "Всего мест в базе: " + placesCount;
-                    tvPlacesInfo.setText(text);
-                } catch (PersistenceException e) {
-                    tvPlacesInfo.setText("Не удалсь получить количество мест из базы");
-                    e.log();
+                DbHelper dbHelper = new DbHelper(getApplicationContext());
+                if (dbHelper.getSettingByName(SERVER_URL) == null) {
+                    dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080/greenserver/sendref");
                 }
                 return null;
             }
         }.execute();
+    }
+
+    private void startPublicationService() {
+        startService(new Intent(this, PublicationService.class));
     }
 
     @Override
