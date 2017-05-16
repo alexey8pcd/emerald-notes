@@ -1,9 +1,14 @@
 package ru.alexey_ovcharov.greenguide.mobile;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
+import android.util.Base64;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -25,7 +30,7 @@ public class Commons {
     public static final String SERVER_URL = "server_url";
 
     @NonNull
-    public static<T> String[] listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper){
+    public static <T> String[] listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {
         String[] result = new String[list.size()];
         for (int i = 0; i < result.length; i++) {
             result[i] = mapper.map(list.get(i));
@@ -36,4 +41,15 @@ public class Commons {
     public static boolean isNotEmpty(String s) {
         return s != null && !s.isEmpty();
     }
+
+    @NonNull
+    public static byte[] bitmapToBytesPng(Bitmap bitmap) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        boolean res = bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        if (res) {
+            return baos.toByteArray();
+        }
+        throw new IOException("Не удалось преобразовать изображение");
+    }
+
 }

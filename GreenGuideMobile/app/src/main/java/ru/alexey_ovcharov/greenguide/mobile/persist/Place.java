@@ -1,23 +1,25 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Base64;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,25 +31,6 @@ import ru.alexey_ovcharov.greenguide.mobile.Commons;
  */
 @Entity
 public class Place {
-
-    public static final String URL_PREFIX = "URL:";
-    public static final String ID_PREFIX = "ID:";
-    private Collection<? extends Bitmap> images;
-
-    @Override
-    public String toString() {
-        return "Place{" +
-                "idPlace=" + idPlace +
-                ", description='" + description + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", address='" + address + '\'' +
-                ", dateCreate='" + dateCreate + '\'' +
-                ", idPlaceType=" + idPlaceType +
-                ", idCountry=" + idCountry +
-                ", imagesInfo=" + imagesInfo +
-                '}';
-    }
 
     public static final String ID_PLACE_COLUMN = "id_place";
     public static final String DESCRIPTION_COLUMN = "description";
@@ -72,15 +55,20 @@ public class Place {
             ID_COUNTRY_COLUMN + " INTEGER REFERENCES countries (id_country) " +
             "   ON DELETE RESTRICT ON UPDATE CASCADE);";
 
-    public static final String IMAGE_FOR_PLACES_TABLE_NAME = "images_for_place";
+    public static final String IMAGES_FOR_PLACE_TABLE_NAME = "images_for_place";
     public static final String ID_IMAGE_FOR_PLACE_COLUMN = "id_image_for_place";
-    public static final String IMAGE_COLUMN = "image";
-    public static final String IMAGE_FOR_PLACES_DROP_SCRIPT = "DROP TABLE IF EXISTS " + IMAGE_FOR_PLACES_TABLE_NAME;
-    public static final String IMAGE_FOR_PLACES_CREATE_SCRIPT = "CREATE TABLE " + IMAGE_FOR_PLACES_TABLE_NAME + " (" +
+    public static final String IMAGE_FOR_PLACES_DROP_SCRIPT = "DROP TABLE IF EXISTS " + IMAGES_FOR_PLACE_TABLE_NAME;
+    public static final String IMAGE_FOR_PLACES_CREATE_SCRIPT = "CREATE TABLE "
+            + IMAGES_FOR_PLACE_TABLE_NAME + " (" +
             ID_IMAGE_FOR_PLACE_COLUMN + " INTEGER PRIMARY KEY NOT NULL, " +
-            ID_PLACE_COLUMN + " INTEGER NOT NULL REFERENCES places (id_place) " +
-            "   ON DELETE RESTRICT ON UPDATE CASCADE, " +
-            IMAGE_COLUMN + " VARCHAR NOT NULL);";
+            ID_PLACE_COLUMN + " INTEGER NOT NULL " +
+//            "REFERENCES places (id_place) " +
+//            "   ON DELETE RESTRICT ON UPDATE CASCADE, " +
+            "," +
+            Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL " +
+//            "REFERENCES images (id_image)" +
+//            " ON DELETE RESTRICT ON UPDATE CASCADE" +
+            ");";
 
     private int idPlace;
     private String description;
@@ -90,22 +78,15 @@ public class Place {
     private String dateCreate;
     private int idPlaceType;
     private Integer idCountry;
+    private List<Integer> imagesInfo = new ArrayList<>(1);
 
-    public List<String> getImagesInfo() {
-
+    public List<Integer> getImagesIds() {
         return imagesInfo;
     }
 
-    public void addImageUrl(String imageUrl) {
-
-        imagesInfo.add(URL_PREFIX + imageUrl);
+    public void addImageId(int idImage) {
+        imagesInfo.add(idImage);
     }
-
-    public void addImageId(long idImage) {
-        imagesInfo.add(ID_PREFIX + idImage);
-    }
-
-    private List<String> imagesInfo = new ArrayList<>(1);
 
     public Place() {
 
@@ -129,6 +110,21 @@ public class Place {
 
     public String getDateCreate() {
         return dateCreate;
+    }
+
+    @Override
+    public String toString() {
+        return "Place{" +
+                "idPlace=" + idPlace +
+                ", description='" + description + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", address='" + address + '\'' +
+                ", dateCreate='" + dateCreate + '\'' +
+                ", idPlaceType=" + idPlaceType +
+                ", idCountry=" + idCountry +
+                ", imagesInfo=" + imagesInfo +
+                '}';
     }
 
     public void setDateCreate(String dateYYYY_MM_DD) throws ParseException {
@@ -183,11 +179,8 @@ public class Place {
         this.idPlaceType = idPlaceType;
     }
 
-    public void addImageInfo(String imageInfo) {
-        if (imageInfo != null && (imageInfo.startsWith(URL_PREFIX)
-                || imageInfo.startsWith(ID_PREFIX))) {
-            this.imagesInfo.add(imageInfo);
-        }
+    public void addImageInfo(int idImage) {
+        this.imagesInfo.add(idImage);
     }
 
     public JSONObject toJsonObject(Map<Integer, String> countries, Context context)
@@ -202,10 +195,45 @@ public class Place {
         jsonObject.put(DATE_CREATE_COLUMN, dateCreate);
         jsonObject.put(ID_PLACE_TYPE_COLUMN, idPlaceType);
         JSONArray imagesJsonArray = new JSONArray();
-        for (String imageId : imagesInfo) {
+        for (Integer imageId : imagesInfo) {
             imagesJsonArray.put(imageId);
         }
         jsonObject.put("images", imagesJsonArray);
         return jsonObject;
+    }
+
+    @NonNull
+    public List<Image.ImageDataWrapper<Bitmap>> getImagesBitmaps(DbHelper dbHelper, ContentResolver contentResolver) {
+        try {
+            List<Image.ImageDataWrapper<Bitmap>> imageDataWrappers = new ArrayList<>(imagesInfo.size());
+            List<String> imageIds = new ArrayList<>();
+            boolean success = imagesInfo.size() > 0;
+            for (Integer idImage : imagesInfo) {
+                try {
+                    List<Image> imageData = dbHelper.getImageData(Collections.singletonList(String.valueOf(idImage)));
+                    Image image = imageData.get(0);
+                    if (image.getUrl() != null) {
+                        Uri imageUrl = Uri.parse(image.getUrl());
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUrl);
+                        imageDataWrappers.add(new Image.ImageDataWrapper(idImage, bitmap));
+                    } else if (image.getBinaryData() != null) {
+                        byte[] binaryData = image.getBinaryData();
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length);
+                        imageDataWrappers.add(new Image.ImageDataWrapper(image.getIdImage(), bitmap));
+                    }
+                } catch (Exception e) {
+                    success = false;
+                    Log.e(Commons.APP_NAME, e.toString(), e);
+                }
+            }
+            return imageDataWrappers;
+        } catch (Exception e) {
+            Log.e(Commons.APP_NAME, e.toString(), e);
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    public void addImageIds(List<Integer> imagesId) {
+        imagesInfo.addAll(imagesId);
     }
 }

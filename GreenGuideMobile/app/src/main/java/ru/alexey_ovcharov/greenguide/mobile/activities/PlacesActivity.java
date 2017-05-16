@@ -2,12 +2,15 @@ package ru.alexey_ovcharov.greenguide.mobile.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,10 +45,32 @@ public class PlacesActivity extends Activity {
         bNewCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(PlacesActivity.this, DialogActivity.class);
-                intent.putExtra(Commons.DIALOG_TITLE, "Новая категория мест");
-
-                startActivityForResult(intent, REQUEST_CODE_NEW_CATEGORY);
+                AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
+                ad.setTitle("Введите название категории");
+                final EditText input = new EditText(PlacesActivity.this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+                ad.setView(input);
+                ad.setPositiveButton("Создать", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String categoryName = input.getText().toString();
+                        if (Commons.isNotEmpty(categoryName)) {
+                            saveCategory(categoryName);
+                            Toast.makeText(PlacesActivity.this,
+                                    "Категория добавлена", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(PlacesActivity.this,
+                                    "Название категории не может быть пустым", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                ad.show();
             }
         });
         Button bPublicAll = (Button) findViewById(R.id.aPlaces_bPublicAll);
@@ -75,22 +100,20 @@ public class PlacesActivity extends Activity {
         showPlacesCountFromDb();
 
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
-//        AsyncTask<Void, Void, Void> placesInfoLoadTask = new AsyncTask<Void, Void, Void>() {
-//            @SuppressWarnings("WrongThread")
-//            @Override
-//            protected Void doInBackground(Void... params) {
-//                int placesCount = 0;
-//                try {
-//                    placesCount = dbHelper.getPlacesCount();
-//                    String text = "Всего мест в базе: " + placesCount;
-//                    tvPlacesInfo.setText(text);
-//                } catch (PersistenceException e) {
-//                    tvPlacesInfo.setText("Не удалсь получить количество мест из базы");
-//                    e.log();
-//                }
-//                return null;
-//            }
-//        }.execute();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int placesCount = 0;
+                try {
+                    placesCount = dbHelper.getPlacesCount();
+                    String text = "Всего мест в базе: " + placesCount;
+                    tvPlacesInfo.setText(text);
+                } catch (PersistenceException e) {
+                    tvPlacesInfo.setText("Не удалсь получить количество мест из базы");
+                    e.log();
+                }
+            }
+        });
     }
 
     private void showPlacesCountFromDb() {

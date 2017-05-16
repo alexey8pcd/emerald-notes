@@ -69,7 +69,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
 
     private void updatePlacesList() {
         try {
-            places = dbHelper.getPlacesByTypeWithoutImages(placeTypeId);
+            places = dbHelper.getPlacesByType(placeTypeId, false);
             String[] placeAddresses = Commons.listToStringArray(places, new Mapper<Place>() {
                 @Override
                 public String map(Place item) {

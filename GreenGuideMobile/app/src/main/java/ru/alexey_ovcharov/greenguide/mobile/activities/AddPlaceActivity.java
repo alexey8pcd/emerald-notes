@@ -1,7 +1,9 @@
 package ru.alexey_ovcharov.greenguide.mobile.activities;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
@@ -9,8 +11,10 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -22,6 +26,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -48,13 +53,21 @@ public class AddPlaceActivity extends Activity {
         }
     }
 
-    private class ButtonChoosePhoteOnClickListener implements View.OnClickListener {
+    private class ButtonChoosePhotoOnClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Выбрать изображения"), PICK_IMAGE_REQUEST);
+            if (Build.VERSION.SDK_INT < 19) {
+                intent = new Intent();
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                startActivityForResult(intent, PICK_IMAGE_REQUEST);
+            } else {
+                intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                startActivityForResult(intent, PICK_IMAGE_REQUEST);
+            }
         }
     }
 
@@ -122,6 +135,13 @@ public class AddPlaceActivity extends Activity {
     private void updateLocation() {
         if (cbSaveCoordinates.isChecked()) {
             try {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                        this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    return;
+                }
                 Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 if (locationNetwork != null) {
                     double latitude = locationNetwork.getLatitude();
@@ -169,7 +189,7 @@ public class AddPlaceActivity extends Activity {
             }
         });
         Button bChoosePhoto = (Button) findViewById(R.id.aAddPlace_bChoosePhoto);
-        bChoosePhoto.setOnClickListener(new ButtonChoosePhoteOnClickListener());
+        bChoosePhoto.setOnClickListener(new ButtonChoosePhotoOnClickListener());
         Button bTakePhoto = (Button) findViewById(R.id.aAddPlace_bPhotoFromCamera);
         bTakePhoto.setOnClickListener(new ButtonTakePhotoOnClickListener());
     }
@@ -196,27 +216,24 @@ public class AddPlaceActivity extends Activity {
                         place.setLongitude(longitude);
                     }
                 }
-                if (Commons.isNotEmpty(selectedImageURI)) {
-                    place.addImageUrl(selectedImageURI);
-                } else if (imageBytes != null) {
-                    long idImage = dbHelper.addImage(imageBytes);
-                    place.addImageId(idImage);
-                } else {
-                    Toast.makeText(getApplicationContext(), "Не выбрано изображение", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        try {
-                            dbHelper.addPlace(place);
-                        } catch (PersistenceException ex) {
-                            ex.log();
+                if (Commons.isNotEmpty(selectedImageURI) || imageBytes != null) {
+                    AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
+                        @Override
+                        protected Void doInBackground(Void... params) {
+                            try {
+                                long idImage = dbHelper.addImage(imageBytes, selectedImageURI);
+                                if (idImage != -1) {
+                                    place.addImageId((int) idImage);
+                                    dbHelper.addPlace(place);
+                                }
+                            } catch (PersistenceException ex) {
+                                ex.log();
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                }.execute();
-                finish();
+                    }.execute();
+                    finish();
+                }
             }
         } catch (Exception e) {
             Log.e(APP_NAME, e.toString(), e);
@@ -236,7 +253,7 @@ public class AddPlaceActivity extends Activity {
                     InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(imageUrl);
                     ivImagePreview.setImageURI(imageUrl);
                     ivImagePreview.invalidate();
-                } catch (FileNotFoundException e) {
+                } catch (Exception e) {
                     Log.e(APP_NAME, e.toString(), e);
                 }
 
@@ -246,12 +263,11 @@ public class AddPlaceActivity extends Activity {
                 Bitmap bitmap = (Bitmap) data.getExtras().get("data");
                 Log.d(APP_NAME, "Сделан снимок с камеры: " + bitmap);
                 if (bitmap != null) {
-
                     ivImagePreview.setImageBitmap(bitmap);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    boolean res = bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                    if (res) {
-                        imageBytes = baos.toByteArray();
+                    try {
+                        imageBytes = Commons.bitmapToBytesPng(bitmap);
+                    } catch (IOException e) {
+                        Log.e(APP_NAME, e.toString(), e);
                     }
                 }
 
@@ -262,6 +278,12 @@ public class AddPlaceActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                 1000 * 5, 10, locationListener);
         locationManager.requestLocationUpdates(

@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,14 +17,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Place;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PlaceType;
@@ -101,7 +106,6 @@ public class PublicationService extends Service {
                 break;
         }
         builder.setSmallIcon(icon)
-//        builder.setSmallIcon(android.R.drawable.stat_sys_upload)
                 .setContentTitle("Результат публикации справочников")
                 .setContentText(textRes);
         Notification notification = builder.build();
@@ -118,9 +122,12 @@ public class PublicationService extends Service {
             JSONObject requestJSON = new JSONObject();
             List<PlaceType> placesTypes = dbHelper.getPlacesTypes();
             JSONArray placeTypesJsonArray = createPlaceTypes(placesTypes);
-            JSONArray placesJsonArray = createPlaces(placesTypes);
+            List<Place> places = getAllPlaces(placesTypes);
+            JSONArray placesJsonArray = createPlaces(places);
             requestJSON.put(Place.TABLE_NAME, placesJsonArray);
             requestJSON.put(PlaceType.TABLE_NAME, placeTypesJsonArray);
+            JSONArray imagesData = createImagesData(places);
+            requestJSON.put(Image.TABLE_NAME, imagesData);
             requestJSON.put(DbHelper.DATABASE_ID, dbHelper.getSettingByName(DbHelper.DATABASE_ID));
             return requestJSON.toString();
         } catch (Exception e) {
@@ -130,20 +137,40 @@ public class PublicationService extends Service {
     }
 
     @NonNull
-    private JSONArray createPlaces(List<PlaceType> placesTypes) throws PersistenceException,
-            FileNotFoundException, JSONException {
-
-        Map<Integer, String> countries = dbHelper.getCountries();
-
+    private JSONArray createImagesData(List<Place> places) throws PersistenceException, IOException {
         JSONArray jsonArray = new JSONArray();
-        for (PlaceType placeType : placesTypes) {
-            List<Place> places = dbHelper.getPlacesByTypeWithImages(placeType.getIdPlaceType());
-            for (Place place : places) {
-                JSONObject jsonObject = place.toJsonObject(countries, getApplicationContext());
-                jsonArray.put(jsonObject);
-            }
+        List<Image> allImages = dbHelper.getAllImages();
+        for (Image image : allImages) {
+            String base64 = image.encodeDataAsBase64(getContentResolver());
+            jsonArray.put(base64);
         }
         return jsonArray;
+    }
+
+
+    @NonNull
+    private JSONArray createPlaces(List<Place> places) throws PersistenceException,
+            FileNotFoundException, JSONException {
+        JSONArray jsonArray = new JSONArray();
+        Map<Integer, String> countries = dbHelper.getCountries();
+        for (Place place : places) {
+            JSONObject jsonObject = place.toJsonObject(countries, getApplicationContext());
+            jsonArray.put(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    @NonNull
+    private List<Place> getAllPlaces(List<PlaceType> placesTypes) throws PersistenceException {
+
+        List<Place> allPlaces = new ArrayList<>();
+        for (PlaceType placeType : placesTypes) {
+            List<Place> places = dbHelper.getPlacesByType(placeType.getIdPlaceType(), true);
+            for (Place place : places) {
+                allPlaces.add(place);
+            }
+        }
+        return allPlaces;
     }
 
     @NonNull

@@ -32,26 +32,65 @@
             android:textAlignment="center"
             android:textSize="24sp"/>
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
+
         <TextView
             android:id="@+id/aShowPlace_tvPlaceDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.22"
             android:text="Описание места"
-            android:textAlignment="center"/>
+            android:textAlignment="center"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
 
         <TextView
             android:id="@+id/aShowPlace_tvAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.11"
-            android:text="Адрес"/>
+            android:text="Адрес"
+            android:textSize="14sp" />
 
-        <GridView
-            android:id="@+id/aShowPlace_gvImages"
+        <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.6"/>
+            android:layout_weight="0.02" />
+
+        <TextView
+            android:id="@+id/aShowPlace_tvTitlePhotos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Фотографии места"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
+
+        <GridView
+            android:id="@+id/aShowPlaces_gvImages"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
+
+        <Button
+            android:id="@+id/aShowPlaces_bAddImage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1"
+            android:text="Добавить фотографию..." />
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
