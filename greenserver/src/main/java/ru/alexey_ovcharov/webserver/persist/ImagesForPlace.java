@@ -2,6 +2,7 @@ package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,7 +34,7 @@ public class ImagesForPlace implements Serializable {
     @Column(name = "id_image_for_place")
     private Long idImageForPlace;
     @JoinColumn(name = "id_image", referencedColumnName = "id_image")
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Images idImage;
     @JoinColumn(name = "id_place", referencedColumnName = "id_place")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

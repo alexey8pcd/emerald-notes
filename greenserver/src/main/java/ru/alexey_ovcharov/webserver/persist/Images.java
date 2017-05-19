@@ -46,6 +46,30 @@ public class Images implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "idImage", fetch = FetchType.LAZY)
     private Collection<ImagesForPlace> imagesForPlaceCollection;
 
+    @Column(name = "remote_database_id")
+    private String remoteDatabaseId; 
+    
+    @Column(name = "id_in_remote_database")
+    private Integer idInRemoteDatabase;
+
+    public String getRemoteDatabaseId() {
+        return remoteDatabaseId;
+    }
+
+    public void setRemoteDatabaseId(String remoteDatabaseId) {
+        this.remoteDatabaseId = remoteDatabaseId;
+    }
+
+    public Integer getIdInRemoteDatabase() {
+        return idInRemoteDatabase;
+    }
+
+    public void setIdInRemoteDatabase(Integer idInRemoteDatabase) {
+        this.idInRemoteDatabase = idInRemoteDatabase;
+    }
+            
+    
+    
     public Images() {
     }
 

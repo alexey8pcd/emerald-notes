@@ -17,6 +17,8 @@ CREATE TABLE "countries"  (
 CREATE TABLE "images"  ( 
 	"id_image"  	serial NOT NULL,
 	"image_data"	bytea NOT NULL,
+        "remote_database_id" character varying,
+        "id_in_remote_database" integer,
 	PRIMARY KEY("id_image")
 );
 CREATE TABLE "images_for_place"  ( 

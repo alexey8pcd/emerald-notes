@@ -16,12 +16,14 @@ ru\alexey_ovcharov\webserver\persist\Images_.class
 ru\alexey_ovcharov\webserver\persist\Images.class
 ru\alexey_ovcharov\webserver\persist\Countries.class
 ru\alexey_ovcharov\webserver\persist\CountriesController.class
+ru\alexey_ovcharov\webserver\util\LangUtil.class
 ru\alexey_ovcharov\webserver\persist\PlaceTypesController$PlaceTypesControllerConverter.class
 ru\alexey_ovcharov\webserver\persist\PlacesFacade.class
 ru\alexey_ovcharov\webserver\persist\ImagesForThing.class
 ru\alexey_ovcharov\webserver\util\LoggerFactory.class
 ru\alexey_ovcharov\webserver\persist\CategoriesOfThingsFacade.class
 ru\alexey_ovcharov\webserver\persist\CategoriesOfThingsController.class
+ru\alexey_ovcharov\webserver\logic\ClientReferencesHandler.class
 ru\alexey_ovcharov\webserver\persist\Places.class
 ru\alexey_ovcharov\webserver\persist\Places_.class
 ru\alexey_ovcharov\webserver\persist\CountriesFacade.class
@@ -31,6 +33,7 @@ ru\alexey_ovcharov\webserver\persist\CategoriesOfThings_.class
 ru\alexey_ovcharov\webserver\persist\PlaceTypesFacade.class
 ru\alexey_ovcharov\webserver\persist\ImagesController$ImagesControllerConverter.class
 ru\alexey_ovcharov\webserver\persist\Messages.class
+ru\alexey_ovcharov\webserver\util\Nullable.class
 ru\alexey_ovcharov\webserver\servlets\ServletUtils.class
 ru\alexey_ovcharov\webserver\persist\NoteTypes_.class
 ru\alexey_ovcharov\webserver\persist\Users_.class
@@ -44,6 +47,7 @@ ru\alexey_ovcharov\webserver\persist\Countries_.class
 ru\alexey_ovcharov\webserver\persist\ThingsController.class
 ru\alexey_ovcharov\webserver\persist\NoteTypes.class
 ru\alexey_ovcharov\webserver\persist\Things.class
+ru\alexey_ovcharov\webserver\util\NotNull.class
 ru\alexey_ovcharov\webserver\servlets\ClientReferencesReceiver.class
 ru\alexey_ovcharov\webserver\persist\CountriesController$CountriesControllerConverter.class
 ru\alexey_ovcharov\webserver\persist\ImagesFacade.class
