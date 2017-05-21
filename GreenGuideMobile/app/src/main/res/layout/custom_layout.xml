@@ -6,8 +6,8 @@
 
     <ImageView
         android:id="@+id/custom_image"
-        android:layout_width="100px"
-        android:layout_height="100px"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="4px"
         android:layout_marginRight="10px"
         android:layout_marginTop="4px"

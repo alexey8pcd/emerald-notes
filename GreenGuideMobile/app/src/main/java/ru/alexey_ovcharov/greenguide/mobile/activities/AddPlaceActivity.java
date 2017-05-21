@@ -13,7 +13,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
@@ -24,8 +26,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -43,13 +44,23 @@ public class AddPlaceActivity extends Activity {
 
     public static final int PICK_IMAGE_REQUEST = 1;
     private static final int CAMERA_REQUEST = 2;
+    private Uri tempImageUri;
 
     private class ButtonTakePhotoOnClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             Log.d(APP_NAME, "Пользователь выбрал сохранение снимка");
-            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            File photo = Commons.getTempPhotoFile();
+            if (photo != null) {
+                tempImageUri = Uri.fromFile(photo);
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, tempImageUri);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            } else {
+                Toast.makeText(AddPlaceActivity.this, "Не удалось создать изображения, возможно " +
+                                "нет доступа к карте памяти!",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -106,7 +117,6 @@ public class AddPlaceActivity extends Activity {
     private String selectedImageURI;
     private DbHelper dbHelper;
     private int placeTypeId;
-    private byte[] imageBytes;
     private LocationManager locationManager;
     private LocationListener locationListener = new LocationListener() {
         @Override
@@ -216,12 +226,12 @@ public class AddPlaceActivity extends Activity {
                         place.setLongitude(longitude);
                     }
                 }
-                if (Commons.isNotEmpty(selectedImageURI) || imageBytes != null) {
+                if (Commons.isNotEmpty(selectedImageURI)) {
                     AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
                         @Override
                         protected Void doInBackground(Void... params) {
                             try {
-                                long idImage = dbHelper.addImage(imageBytes, selectedImageURI);
+                                long idImage = dbHelper.addImage(selectedImageURI);
                                 if (idImage != -1) {
                                     place.addImageId((int) idImage);
                                     dbHelper.addPlace(place);
@@ -250,7 +260,6 @@ public class AddPlaceActivity extends Activity {
                 Log.d(APP_NAME, "Выбрано изображение на устройстве: " + imageUrl);
                 selectedImageURI = imageUrl.toString();
                 try {
-                    InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(imageUrl);
                     ivImagePreview.setImageURI(imageUrl);
                     ivImagePreview.invalidate();
                 } catch (Exception e) {
@@ -259,18 +268,11 @@ public class AddPlaceActivity extends Activity {
 
             }
         } else if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-            if (data != null) {
-                Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                Log.d(APP_NAME, "Сделан снимок с камеры: " + bitmap);
-                if (bitmap != null) {
-                    ivImagePreview.setImageBitmap(bitmap);
-                    try {
-                        imageBytes = Commons.bitmapToBytesPng(bitmap);
-                    } catch (IOException e) {
-                        Log.e(APP_NAME, e.toString(), e);
-                    }
-                }
-
+            if (tempImageUri != null) {
+                selectedImageURI = tempImageUri.toString();
+                Log.d(APP_NAME, "Сделан снимок с камеры: " + selectedImageURI);
+                ivImagePreview.setImageURI(tempImageUri);
+                ivImagePreview.invalidate();
             }
         }
     }

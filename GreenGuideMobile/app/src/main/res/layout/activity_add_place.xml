@@ -10,7 +10,6 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
         android:weightSum="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -21,7 +20,8 @@
         tools:layout_constraintRight_creator="1"
         tools:layout_constraintTop_creator="1"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintVertical_bias="0.0">
+        app:layout_constraintVertical_bias="0.0"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/aAddPlace_tvTitle"
@@ -32,6 +32,10 @@
             android:textSize="24sp"
             />
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <EditText
             android:id="@+id/aAddPlace_etDescription"
             android:layout_width="match_parent"
@@ -41,13 +45,33 @@
             android:hint="Описание"
             android:inputType="textShortMessage"/>
 
-        <CheckBox
-            android:id="@+id/aAddPlace_cbSaveAddress"
+        <Space
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Указать адрес"
-            />
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_weight="0.18"
+            android:weightSum="1">
+
+            <CheckBox
+                android:id="@+id/aAddPlace_cbSaveAddress"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:checked="true"
+                android:text="Указать адрес" />
+
+            <Button
+                android:id="@+id/aAddPlace_bChooseAddressOnMap"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:text="Указать на карте..." />
+
+        </LinearLayout>
 
         <EditText
             android:id="@+id/aAddPlace_etAddress"
@@ -56,14 +80,18 @@
             android:ems="10"
             android:hint="Адрес"
             android:inputType="textPersonName"
-            android:layout_weight="0.15"/>
+            android:layout_weight="0.12" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:weightSum="1"
             android:orientation="horizontal"
-            android:layout_weight="0.6">
+            android:layout_weight="0.5">
 
             <ImageView
                 android:id="@+id/aAddPlace_ivPreviewImage"
@@ -104,13 +132,17 @@
 
         </LinearLayout>
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <CheckBox
             android:id="@+id/aAddPlace_cbSaveCoordinates"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Вычислить координаты(для автоматического получения координат должна быть включена геолокация)"
-            android:textSize="10sp" />
+            android:text="Использовать текущие координаты(для автоматического получения координат должна быть включена геолокация)"
+            android:textSize="12sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -139,6 +171,10 @@
                 android:inputType="none" />
 
         </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <Button
             android:id="@+id/aAddPlace_bSave"

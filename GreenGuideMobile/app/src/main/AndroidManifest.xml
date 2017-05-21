@@ -1,58 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="ru.alexey_ovcharov.greenguide.mobile">
+    package="ru.alexey_ovcharov.greenguide.mobile">
 
     <permission
         android:name="android.permission.CAMERA"
-        android:label="Камера"/>
+        android:label="Камера" />
     <permission
         android:name="android.permission.INTERNET"
-        android:label="Доступ в Интернет"/>
+        android:label="Доступ в Интернет" />
     <permission
         android:name="android.permission.MANAGE_DOCUMENTS"
-        android:label="Доступ к файлам на устройстве"/>
+        android:label="Доступ к файлам на устройстве" />
+    <permission
+        android:name="android.permission.MAPS_RECEIVE"
+        android:protectionLevel="signature" />
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="ru.alexey_ovcharov.greenguide.mobile.permission.MAPS_RECEIVE" />
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
-    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"/>
+    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:name="android.support.multidex.MultiDexApplication"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.PlacesActivity"/>
+        <activity android:name=".activities.PlacesActivity" />
         <activity android:name=".activities.MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.PlacesCategoriesActivity">
-        </activity>
-        <activity android:name=".activities.PlacesListInChoosenCategoryActivity">
-        </activity>
-        <activity android:name=".activities.AddPlaceActivity">
-        </activity>
+        <activity android:name=".activities.CategoriesOfPlacesActivity" />
+        <activity android:name=".activities.PlacesListInChoosenCategoryActivity" />
+        <activity android:name=".activities.AddPlaceActivity" />
         <activity
             android:name=".activities.ShowPlaceActivity"
             android:label="@string/title_activity_show_place"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
-        <activity android:name=".activities.SettingsActivity">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".activities.SettingsActivity" />
 
         <service
             android:name=".services.PublicationService"
             android:enabled="true"
-            android:exported="true">
-        </service>
+            android:exported="true" />
+
+        <!--
+             The API key for Google Maps-based APIs is defined as a string resource.
+             (See the file "res/values/google_maps_api.xml").
+             Note that the API key is linked to the encryption key used to sign the APK.
+             You need a different API key for each encryption key, including the release key that is used to
+             sign the APK for publishing.
+             You can define the keys for the debug and release targets in src/debug/ and src/release/. 
+        -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".activities.PlacesMapActivity"
+            android:label="@string/title_activity_places_map"></activity>
     </application>
 
 </manifest>

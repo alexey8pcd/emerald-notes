@@ -17,7 +17,7 @@ import ru.alexey_ovcharov.greenguide.mobile.Mapper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PlaceType;
 
-public class PlacesCategoriesActivity extends Activity {
+public class CategoriesOfPlacesActivity extends Activity {
 
     private class ListViewPlaceTypesOnItemClickListener implements AdapterView.OnItemClickListener {
         @Override
@@ -26,7 +26,7 @@ public class PlacesCategoriesActivity extends Activity {
                 PlaceType placeType = placeTypes.get(position);
                 int idPlaceType = placeType.getIdPlaceType();
                 String placeTypeName = placeType.getType();
-                Intent intent = new Intent(PlacesCategoriesActivity.this, PlacesListInChoosenCategoryActivity.class);
+                Intent intent = new Intent(CategoriesOfPlacesActivity.this, PlacesListInChoosenCategoryActivity.class);
                 intent.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
                 intent.putExtra(PlaceType.TYPE_COLUMN, placeTypeName);
                 startActivity(intent);

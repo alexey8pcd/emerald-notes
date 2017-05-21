@@ -22,16 +22,13 @@ public class Image {
     public static final String DROP_SCRIPT = "DROP TABLE IF EXISTS " + TABLE_NAME;
     public static final String CREATE_SCRIPT = "CREATE TABLE " + TABLE_NAME + " ("
             + ID_IMAGE_COLUMN + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-            BINARY_DATA_COLUMN + " BLOB, " +
             URL_COLUMN + " VARCHAR);";
 
     private int idImage;
-    private byte[] binaryData;
     private String url;
 
-    public Image(int idImage, byte[] bytes, String url) {
+    public Image(int idImage, String url) {
         this.idImage = idImage;
-        this.binaryData = bytes;
         this.url = url;
     }
 
@@ -46,14 +43,6 @@ public class Image {
         this.idImage = idImage;
     }
 
-    public byte[] getBinaryData() {
-        return binaryData;
-    }
-
-    public void setBinaryData(byte[] binaryData) {
-        this.binaryData = binaryData;
-    }
-
     public String getUrl() {
         return url;
     }
@@ -63,9 +52,7 @@ public class Image {
     }
 
     public String encodeDataAsBase64(ContentResolver contentResolver) throws IOException {
-        if(url == null && binaryData != null){
-            return Base64.encodeToString(binaryData, Base64.DEFAULT);
-        } else if (url != null){
+        if (url != null) {
             Uri imageUrl = Uri.parse(url);
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUrl);
             byte[] bytes = Commons.bitmapToBytesPng(bitmap);

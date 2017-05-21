@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Зеленый гид</string>
     <string name="title_activity_show_place">ShowPlaceActivity</string>
+    <string name="title_activity_places_map">Map</string>
 </resources>

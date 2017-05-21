@@ -6,7 +6,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,9 +21,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
@@ -39,6 +39,7 @@ public class PublicationService extends Service {
 
     private static final int NOTIFY_ID = 101;
     private DbHelper dbHelper;
+    private static final String URL_PUBLIC_REFERENCES = "/greenserver/sendref";
 
     public PublicationService() {
     }
@@ -137,12 +138,20 @@ public class PublicationService extends Service {
     }
 
     @NonNull
-    private JSONArray createImagesData(List<Place> places) throws PersistenceException, IOException {
+    private JSONArray createImagesData(List<Place> places) throws PersistenceException, IOException, JSONException {
         JSONArray jsonArray = new JSONArray();
-        List<Image> allImages = dbHelper.getAllImages();
+        Set<Integer> imageIds = new HashSet<>();
+        for (Place place : places) {
+            List<Integer> imagesIdsInt = place.getImagesIds();
+            imageIds.addAll(imagesIdsInt);
+        }
+        List<Image> allImages = dbHelper.getImageData(imageIds);
         for (Image image : allImages) {
             String base64 = image.encodeDataAsBase64(getContentResolver());
-            jsonArray.put(base64);
+            JSONObject imageData = new JSONObject();
+            imageData.put(Image.ID_IMAGE_COLUMN, image.getIdImage());
+            imageData.put(Image.BINARY_DATA_COLUMN, base64);
+            jsonArray.put(imageData);
         }
         return jsonArray;
     }
@@ -187,7 +196,7 @@ public class PublicationService extends Service {
     private NetworkStatus sendData(String data) {
         try {
             String serviceUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
-            URL url = new URL(serviceUrl);
+            URL url = new URL(serviceUrl + URL_PUBLIC_REFERENCES);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(250000);
             conn.setConnectTimeout(25000);

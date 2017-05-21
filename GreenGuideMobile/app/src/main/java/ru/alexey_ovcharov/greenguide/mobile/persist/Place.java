@@ -3,12 +3,16 @@ package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,6 +83,7 @@ public class Place {
     private int idPlaceType;
     private Integer idCountry;
     private List<Integer> imagesInfo = new ArrayList<>(1);
+    private LatLng location;
 
     public List<Integer> getImagesIds() {
         return imagesInfo;
@@ -90,6 +95,36 @@ public class Place {
 
     public Place() {
 
+    }
+
+    public Place(Cursor cursor) throws ParseException {
+        idPlaceType = cursor.getInt(cursor.getColumnIndex(ID_PLACE_TYPE_COLUMN));
+        idPlace = cursor.getInt(cursor.getColumnIndex(ID_PLACE_COLUMN));
+        int columnIndexAddress = cursor.getColumnIndex(ADDRESS_COLUMN);
+        address = cursor.getString(columnIndexAddress);
+        if (cursor.isNull(columnIndexAddress) || "null".equals(address)) {
+            address = null;
+        }
+        description = cursor.getString(cursor.getColumnIndex(Place.DESCRIPTION_COLUMN));
+        dateCreate = cursor.getString(cursor.getColumnIndex(Place.DATE_CREATE_COLUMN));
+        int columnIndexCountry = cursor.getColumnIndex(Place.ID_COUNTRY_COLUMN);
+        idCountry = cursor.getInt(columnIndexCountry);
+        if (cursor.isNull(columnIndexCountry)) {
+            idCountry = null;
+        }
+        int columnIndexLatitude = cursor.getColumnIndex(Place.LATITUDE_COLUMN);
+        if (cursor.isNull(columnIndexLatitude)) {
+            latitude = null;
+        } else {
+            latitude = new BigDecimal(cursor.getString(columnIndexLatitude));
+        }
+
+        int columnIndexLongitude = cursor.getColumnIndex(Place.LONGITUDE_COLUMN);
+        if (cursor.isNull(columnIndexLongitude)) {
+            longitude = null;
+        } else {
+            longitude = new BigDecimal(cursor.getString(columnIndexLongitude));
+        }
     }
 
     public BigDecimal getLatitude() {
@@ -210,16 +245,12 @@ public class Place {
             boolean success = imagesInfo.size() > 0;
             for (Integer idImage : imagesInfo) {
                 try {
-                    List<Image> imageData = dbHelper.getImageData(Collections.singletonList(String.valueOf(idImage)));
+                    List<Image> imageData = dbHelper.getImageData(Collections.singletonList(idImage));
                     Image image = imageData.get(0);
                     if (image.getUrl() != null) {
                         Uri imageUrl = Uri.parse(image.getUrl());
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUrl);
                         imageDataWrappers.add(new Image.ImageDataWrapper(idImage, bitmap));
-                    } else if (image.getBinaryData() != null) {
-                        byte[] binaryData = image.getBinaryData();
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length);
-                        imageDataWrappers.add(new Image.ImageDataWrapper(image.getIdImage(), bitmap));
                     }
                 } catch (Exception e) {
                     success = false;
@@ -235,5 +266,14 @@ public class Place {
 
     public void addImageIds(List<Integer> imagesId) {
         imagesInfo.addAll(imagesId);
+    }
+
+    @Nullable
+    public LatLng getLocation() {
+        if (latitude != null && longitude != null) {
+            return new LatLng(latitude.doubleValue(), longitude.doubleValue());
+        } else {
+            return null;
+        }
     }
 }

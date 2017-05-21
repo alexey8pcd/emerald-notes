@@ -2,7 +2,6 @@ package ru.alexey_ovcharov.greenguide.mobile.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -37,7 +36,7 @@ public class PlacesActivity extends Activity {
         bShowList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(PlacesActivity.this, PlacesCategoriesActivity.class);
+                Intent intent = new Intent(PlacesActivity.this, CategoriesOfPlacesActivity.class);
                 startActivity(intent);
             }
         });
@@ -45,58 +44,25 @@ public class PlacesActivity extends Activity {
         bNewCategory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
-                ad.setTitle("Введите название категории");
-                final EditText input = new EditText(PlacesActivity.this);
-                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
-                ad.setView(input);
-                ad.setPositiveButton("Создать", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String categoryName = input.getText().toString();
-                        if (Commons.isNotEmpty(categoryName)) {
-                            saveCategory(categoryName);
-                            Toast.makeText(PlacesActivity.this,
-                                    "Категория добавлена", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(PlacesActivity.this,
-                                    "Название категории не может быть пустым", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-                ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                ad.show();
+                addNewCategory();
             }
         });
         Button bPublicAll = (Button) findViewById(R.id.aPlaces_bPublicAll);
         bPublicAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
-                ad.setTitle("Разрешение на отправку");
-                ad.setMessage("Публикация информации о местах может потребовать передачи " +
-                        "большого объема данных на сервер, продолжить?");
-                ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        Toast.makeText(PlacesActivity.this, "Процесс отправки данных запущен",
-                                Toast.LENGTH_LONG).show();
-                        startPublicationService();
-                    }
-                });
-                ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        //ничего не делаем
-                    }
-                });
-                ad.show();
+                publicPlacesReference();
 
             }
         });
+        Button bPlacesOnMap = (Button) findViewById(R.id.aPlaces_bAsMap);
+        bPlacesOnMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(PlacesActivity.this, PlacesMapActivity.class));
+            }
+        });
+
         showPlacesCountFromDb();
 
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
@@ -116,6 +82,55 @@ public class PlacesActivity extends Activity {
         });
     }
 
+    private void publicPlacesReference() {
+        AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
+        ad.setTitle("Разрешение на отправку");
+        ad.setMessage("Публикация информации о местах может потребовать передачи " +
+                "большого объема данных на сервер, продолжить?");
+        ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Toast.makeText(PlacesActivity.this, "Процесс отправки данных запущен",
+                        Toast.LENGTH_LONG).show();
+                startPublicationService();
+            }
+        });
+        ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                //ничего не делаем
+            }
+        });
+        ad.show();
+    }
+
+    private void addNewCategory() {
+        AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
+        ad.setTitle("Введите название категории");
+        final EditText input = new EditText(PlacesActivity.this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+        ad.setView(input);
+        ad.setPositiveButton("Создать", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String categoryName = input.getText().toString();
+                if (Commons.isNotEmpty(categoryName)) {
+                    saveCategory(categoryName);
+                    Toast.makeText(PlacesActivity.this,
+                            "Категория добавлена", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(PlacesActivity.this,
+                            "Название категории не может быть пустым", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        ad.show();
+    }
+
     private void showPlacesCountFromDb() {
         new AsyncTask<Void, Void, Void>() {
 
@@ -123,7 +138,7 @@ public class PlacesActivity extends Activity {
             protected Void doInBackground(Void... params) {
                 DbHelper dbHelper = new DbHelper(getApplicationContext());
                 if (dbHelper.getSettingByName(SERVER_URL) == null) {
-                    dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080/greenserver/sendref");
+                    dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080");
                 }
                 return null;
             }
