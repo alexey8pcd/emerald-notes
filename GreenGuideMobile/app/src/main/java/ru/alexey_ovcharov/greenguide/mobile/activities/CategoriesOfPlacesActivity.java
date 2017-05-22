@@ -26,7 +26,8 @@ public class CategoriesOfPlacesActivity extends Activity {
                 PlaceType placeType = placeTypes.get(position);
                 int idPlaceType = placeType.getIdPlaceType();
                 String placeTypeName = placeType.getType();
-                Intent intent = new Intent(CategoriesOfPlacesActivity.this, PlacesListInChoosenCategoryActivity.class);
+                Intent intent = new Intent(CategoriesOfPlacesActivity.this,
+                        PlacesListInChoosenCategoryActivity.class);
                 intent.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
                 intent.putExtra(PlaceType.TYPE_COLUMN, placeTypeName);
                 startActivity(intent);
@@ -43,7 +44,7 @@ public class CategoriesOfPlacesActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places_categories);
         lvPlaceTypes = (ListView)findViewById(R.id.aPlacesCategories_lvCategories);
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
         placeTypes = dbHelper.getPlacesTypes();
         String[] placeTypeNames = Commons.listToStringArray(placeTypes, new Mapper<PlaceType>() {
             @Override

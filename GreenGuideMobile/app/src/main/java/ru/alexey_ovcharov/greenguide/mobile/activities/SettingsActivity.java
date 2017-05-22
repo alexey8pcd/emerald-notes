@@ -25,7 +25,7 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
         etServerUrl = (EditText) findViewById(R.id.aSettings_etServerAddress);
 
         String serverUrl = dbHelper.getSettingByName(SERVER_URL);

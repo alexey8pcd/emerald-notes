@@ -31,7 +31,7 @@ public class PlacesActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places);
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
         Button bShowList = (Button) findViewById(R.id.aPlaces_bAsList);
         bShowList.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,7 +136,7 @@ public class PlacesActivity extends Activity {
 
             @Override
             protected Void doInBackground(Void... params) {
-                DbHelper dbHelper = new DbHelper(getApplicationContext());
+                DbHelper dbHelper = DbHelper.getInstance(getApplicationContext());
                 if (dbHelper.getSettingByName(SERVER_URL) == null) {
                     dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080");
                 }

@@ -41,9 +41,20 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String DATABASE_ID = "database_id";
     public static final String NAME_COLUMN = "name";
     public static final String VALUE_COLUMN = "value";
-    private LatLng lastKnownCoordinates;
+    private static volatile DbHelper INSTANCE;
 
-    public DbHelper(Context context) {
+    public static DbHelper getInstance(Context context) {
+        if (INSTANCE == null) {
+            synchronized (DbHelper.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new DbHelper(context);
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
+    private DbHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
     }
 
@@ -221,7 +232,7 @@ public class DbHelper extends SQLiteOpenHelper {
             cv.put(Image.ID_IMAGE_COLUMN, idImage);
             cv.put(Place.ID_PLACE_COLUMN, idPlace);
             long rowNum = database.insert(Place.IMAGES_FOR_PLACE_TABLE_NAME, null, cv);
-            if (rowNum != -1) {
+            if (rowNum != ROW_NOT_INSERTED) {
                 Log.d(APP_NAME, "Изображение добавлено для места");
             }
             return rowNum;
@@ -236,7 +247,7 @@ public class DbHelper extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
             values.put(Image.URL_COLUMN, imageUrl);
             long rowNum = database.insert(Image.TABLE_NAME, null, values);
-            if (rowNum != -1) {
+            if (rowNum != ROW_NOT_INSERTED) {
                 Log.d(APP_NAME, "Изображение вставлено");
             } else {
                 Log.d(APP_NAME, "Не удалось вставить изображение");
@@ -300,20 +311,24 @@ public class DbHelper extends SQLiteOpenHelper {
             }
             List<Integer> imagesIds = place.getImagesIds();
             database.beginTransaction();
-            long idPlace = database.insert(Place.TABLE_NAME, null, values);
-            if (idPlace != ROW_NOT_INSERTED) {
-                for (Integer idImage : imagesIds) {
-                    ContentValues imageCv = new ContentValues(2);
-                    imageCv.put(Image.ID_IMAGE_COLUMN, idImage);
-                    imageCv.put(Place.ID_PLACE_COLUMN, idPlace);
-                    long insert = database.insert(Place.IMAGES_FOR_PLACE_TABLE_NAME, null, imageCv);
-                    if (insert == ROW_NOT_INSERTED) {
-                        throw new Exception("Не удалось добавить изображение для места с ид: "
-                                + idPlace + ", выполняю откат");
+            try {
+                long idPlace = database.insert(Place.TABLE_NAME, null, values);
+                if (idPlace != ROW_NOT_INSERTED) {
+                    for (Integer idImage : imagesIds) {
+                        ContentValues imageCv = new ContentValues(2);
+                        imageCv.put(Image.ID_IMAGE_COLUMN, idImage);
+                        imageCv.put(Place.ID_PLACE_COLUMN, idPlace);
+                        long insert = database.insert(Place.IMAGES_FOR_PLACE_TABLE_NAME, null, imageCv);
+                        if (insert == ROW_NOT_INSERTED) {
+                            throw new Exception("Не удалось добавить изображение для места с ид: "
+                                    + idPlace + ", выполняю откат");
+                        }
                     }
+                    database.setTransactionSuccessful();
+                    Log.d(APP_NAME, "Место добавлено, ид: " + idPlace);
                 }
-                database.setTransactionSuccessful();
-                Log.d(APP_NAME, "Место добавлено, ид: " + idPlace);
+            } finally {
+                database.endTransaction();
             }
         } catch (Exception ex) {
             throw new PersistenceException("Не удалось добавить место", ex);
@@ -390,24 +405,29 @@ public class DbHelper extends SQLiteOpenHelper {
                 upPlaceData.put(Place.LONGITUDE_COLUMN, place.getLongitude().toString());
             }
             database.beginTransaction();
-            String idPlaceStr = String.valueOf(idPlace);
-            String[] placeIdArray = {idPlaceStr};
-            int update = database.update(Place.TABLE_NAME, upPlaceData, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
-            if (update > 0) {
-                database.delete(Place.IMAGES_FOR_PLACE_TABLE_NAME, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
-                for (Integer idImage : place.getImagesIds()) {
-                    ContentValues imageCv = new ContentValues(2);
-                    imageCv.put(Image.ID_IMAGE_COLUMN, idImage);
-                    imageCv.put(Place.ID_PLACE_COLUMN, idPlace);
-                    long insert = database.insert(Place.IMAGES_FOR_PLACE_TABLE_NAME, null, imageCv);
-                    if (insert == ROW_NOT_INSERTED) {
-                        throw new Exception("Не удалось добавить изображение для места с ид: "
-                                + idPlace + ", выполняю откат");
+            try {
+                String idPlaceStr = String.valueOf(idPlace);
+                String[] placeIdArray = {idPlaceStr};
+                int update = database.update(Place.TABLE_NAME, upPlaceData, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
+                if (update > 0) {
+                    database.delete(Place.IMAGES_FOR_PLACE_TABLE_NAME, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
+                    for (Integer idImage : place.getImagesIds()) {
+                        ContentValues imageCv = new ContentValues(2);
+                        imageCv.put(Image.ID_IMAGE_COLUMN, idImage);
+                        imageCv.put(Place.ID_PLACE_COLUMN, idPlace);
+                        long insert = database.insert(Place.IMAGES_FOR_PLACE_TABLE_NAME, null, imageCv);
+                        if (insert == ROW_NOT_INSERTED) {
+                            throw new Exception("Не удалось добавить изображение для места с ид: "
+                                    + idPlace + ", выполняю откат");
+                        }
                     }
+                    database.setTransactionSuccessful();
+                    Log.d(APP_NAME, "Место обновлено с ид: " + idPlace);
                 }
-                database.setTransactionSuccessful();
-                Log.d(APP_NAME, "Место обновлено с ид: " + idPlace);
+            } finally {
+                database.endTransaction();
             }
+
         } catch (Exception e) {
             throw new PersistenceException("Не удалось обновить место по ид: " + idPlace);
         }

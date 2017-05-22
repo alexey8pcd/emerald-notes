@@ -1,5 +1,6 @@
 package ru.alexey_ovcharov.greenguide.mobile.activities;
 
+import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,7 @@ import com.google.android.gms.maps.model.PointOfInterest;
 
 import java.util.List;
 
+import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Place;
@@ -28,12 +30,15 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private GoogleMap googleMap;
     private DbHelper dbHelper;
+    private int mapOpenType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places_map);
-        dbHelper = new DbHelper(getApplicationContext());
+        Intent intent = getIntent();
+        mapOpenType = intent.getIntExtra(Commons.MAP_OPEN_TYPE, -1);
+        dbHelper = DbHelper.getInstance(getApplicationContext());
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         Log.d(APP_NAME, "Начинаю загрузку карты");
@@ -44,6 +49,19 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
     public void onMapReady(GoogleMap googleMap) {
         Log.d(APP_NAME, "Карта загрузилась");
         this.googleMap = googleMap;
+        this.googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Log.d(APP_NAME, "Пользователь выбрал координаты на карте: " + latLng);
+                if (mapOpenType == Commons.OPEN_TYPE_CHOOSE_LOCATION && latLng != null) {
+                    Intent intent = new Intent();
+                    intent.putExtra(Place.LATITUDE_COLUMN, latLng.latitude);
+                    intent.putExtra(Place.LONGITUDE_COLUMN, latLng.longitude);
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }
+            }
+        });
         this.googleMap.setOnPoiClickListener(new GoogleMap.OnPoiClickListener() {
             @Override
             public void onPoiClick(PointOfInterest poi) {

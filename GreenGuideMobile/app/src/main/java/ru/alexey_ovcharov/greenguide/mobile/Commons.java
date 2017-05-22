@@ -31,6 +31,8 @@ public class Commons {
     public static final String SQL_DATE_FORMAT = "yyyy-MM-dd";
     public static final String PLACE_ID = "placeId";
     public static final String SERVER_URL = "server_url";
+    public static final String MAP_OPEN_TYPE = "mapOpenType";
+    public static final int OPEN_TYPE_CHOOSE_LOCATION = 1;
 
     @NonNull
     public static <T> String[] listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {

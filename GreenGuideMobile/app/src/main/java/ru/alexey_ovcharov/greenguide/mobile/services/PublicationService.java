@@ -47,7 +47,7 @@ public class PublicationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
     }
 
     @Override

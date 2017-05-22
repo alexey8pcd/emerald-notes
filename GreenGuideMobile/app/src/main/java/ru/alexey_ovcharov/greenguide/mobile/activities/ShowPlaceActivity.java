@@ -141,7 +141,7 @@ public class ShowPlaceActivity extends Activity {
         imagesView.setLayoutManager(layoutManager);
 
         selectedPlaceId = intent.getIntExtra(Commons.PLACE_ID, 0);
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
         Button bAddImage = (Button) findViewById(R.id.aShowPlaces_bAddImage);
         bAddImage.setOnClickListener(new View.OnClickListener() {
             @Override

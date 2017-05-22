@@ -45,7 +45,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places_list);
         final Intent intent = getIntent();
-        dbHelper = new DbHelper(getApplicationContext());
+        dbHelper = DbHelper.getInstance(getApplicationContext());
 
         String placeTypeName = intent.getStringExtra(PlaceType.TYPE_COLUMN);
         TextView tvTitle = (TextView) findViewById(R.id.aPlacesList_tvTitle);
