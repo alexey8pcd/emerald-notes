@@ -24,6 +24,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -157,17 +159,21 @@ public class AddPlaceActivity extends Activity {
                 Location locationNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 if (locationNetwork != null) {
                     double latitude = locationNetwork.getLatitude();
-                    tvLatitude.setText(String.valueOf(latitude));
                     double longitude = locationNetwork.getLongitude();
+
+                    tvLatitude.setText(String.valueOf(latitude));
                     tvLongitude.setText(String.valueOf(longitude));
+                    saveCoordinatesAsync(latitude, longitude);
                     gpsCurrentCoordinatesReceived = true;
                 } else {
                     Location locationGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                     if (locationGps != null) {
                         double latitude = locationGps.getLatitude();
-                        tvLatitude.setText(String.valueOf(latitude));
                         double longitude = locationGps.getLongitude();
+
+                        tvLatitude.setText(String.valueOf(latitude));
                         tvLongitude.setText(String.valueOf(longitude));
+                        saveCoordinatesAsync(latitude, longitude);
                         gpsCurrentCoordinatesReceived = true;
                     }
                 }
@@ -180,6 +186,21 @@ public class AddPlaceActivity extends Activity {
         }
     }
 
+    private void saveCoordinatesAsync(final double latitude, final double longitude) {
+        AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    dbHelper.putSetting(Place.LATITUDE_COLUMN, String.valueOf(latitude));
+                    dbHelper.putSetting(Place.LONGITUDE_COLUMN, String.valueOf(longitude));
+                } catch (Exception ex) {
+                    Log.w(APP_NAME, "Не могу сохранить координаты: " + ex, ex);
+                }
+                return null;
+            }
+        }.execute();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -187,7 +208,7 @@ public class AddPlaceActivity extends Activity {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         Intent currentIntent = getIntent();
-        placeTypeId = currentIntent.getIntExtra(Commons.PLACE_TYPE_ID, 0);
+        placeTypeId = currentIntent.getIntExtra(Place.ID_PLACE_TYPE_COLUMN, 0);
         etDescription = (EditText) findViewById(R.id.aAddPlace_etDescription);
         dbHelper = DbHelper.getInstance(getApplicationContext());
         etAddress = (EditText) findViewById(R.id.aAddPlace_etAddress);
@@ -227,7 +248,7 @@ public class AddPlaceActivity extends Activity {
     private void savePlace() {
         try {
             String description = etDescription.getText().toString();
-            if (Commons.isNotEmpty(description)) {
+            if (StringUtils.isNotEmpty(description)) {
                 String address = cbSaveAddress.isChecked() ? etAddress.getText().toString() : null;
                 final Place place = new Place();
                 place.setDescription(description);
@@ -236,8 +257,8 @@ public class AddPlaceActivity extends Activity {
                 place.setIdPlaceType(placeTypeId);
                 if (gpsCurrentCoordinatesReceived || onMapCoordinatesReceived) {
                     if (tvLatitude.getText() != null && tvLongitude.getText() != null
-                            && Commons.isNotEmpty(tvLatitude.getText().toString())
-                            && Commons.isNotEmpty(tvLongitude.getText().toString())) {
+                            && StringUtils.isNotEmpty(tvLatitude.getText().toString())
+                            && StringUtils.isNotEmpty(tvLongitude.getText().toString())) {
 
                         BigDecimal latitude = new BigDecimal(tvLatitude.getText().toString());
                         BigDecimal longitude = new BigDecimal(tvLongitude.getText().toString());
@@ -245,7 +266,7 @@ public class AddPlaceActivity extends Activity {
                         place.setLongitude(longitude);
                     }
                 }
-                if (Commons.isNotEmpty(selectedImageURI)) {
+                if (StringUtils.isNotEmpty(selectedImageURI)) {
                     AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
                         @Override
                         protected Void doInBackground(Void... params) {

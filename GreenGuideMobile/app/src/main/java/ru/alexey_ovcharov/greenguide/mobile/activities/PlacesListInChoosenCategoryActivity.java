@@ -30,7 +30,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
         @Override
         public void onClick(View v) {
             Intent intentAddPlace = new Intent(PlacesListInChoosenCategoryActivity.this, AddPlaceActivity.class);
-            intentAddPlace.putExtra(Commons.PLACE_TYPE_ID, placeTypeId);
+            intentAddPlace.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, placeTypeId);
             startActivityForResult(intentAddPlace, ADD_PLACE_REQUEST);
         }
     }
@@ -56,7 +56,7 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent showPlaceIntent = new Intent(PlacesListInChoosenCategoryActivity.this, ShowPlaceActivity.class);
-                showPlaceIntent.putExtra(Commons.PLACE_ID, places.get(position).getIdPlace());
+                showPlaceIntent.putExtra(Place.ID_PLACE_COLUMN, places.get(position).getIdPlace());
                 startActivity(showPlaceIntent);
             }
         });

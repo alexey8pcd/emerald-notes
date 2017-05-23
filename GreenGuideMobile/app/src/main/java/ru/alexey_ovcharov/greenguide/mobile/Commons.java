@@ -24,12 +24,7 @@ import java.util.logging.SimpleFormatter;
 
 public class Commons {
     public static final String APP_NAME = "Зеленый гид";
-    public static final String PLACE_TYPE_ID = "placeTypeId";
-    public static final String WORK_DIR = "/Android/data/ru.alexey_ovcharov.greenguide/";
-    public static final String DIALOG_TITLE = "dialogTitle";
-    public static final String DIALOG_RESULT = "dialogResult";
     public static final String SQL_DATE_FORMAT = "yyyy-MM-dd";
-    public static final String PLACE_ID = "placeId";
     public static final String SERVER_URL = "server_url";
     public static final String MAP_OPEN_TYPE = "mapOpenType";
     public static final int OPEN_TYPE_CHOOSE_LOCATION = 1;
@@ -41,10 +36,6 @@ public class Commons {
             result[i] = mapper.map(list.get(i));
         }
         return result;
-    }
-
-    public static boolean isNotEmpty(String s) {
-        return s != null && !s.isEmpty();
     }
 
     @NonNull

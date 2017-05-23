@@ -97,7 +97,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Nullable
     public String getSettingByName(String name) {
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursor = database.rawQuery("select value from " + SETTINGS_TABLE_NAME
                     + " where name='" + name.replaceAll("'", "\"") + "'", null)) {
                 if (cursor.moveToFirst()) {
@@ -111,7 +112,8 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void putSetting(String name, String value) {
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             name = name.replaceAll("'", "\"");
             value = value.replaceAll("'", "\"");
             ContentValues cv = new ContentValues();
@@ -131,7 +133,8 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<PlaceType> getPlacesTypes() {
         Log.d(APP_NAME, "Выбираю типы мест из базы");
         List<PlaceType> placeTypes = Collections.EMPTY_LIST;
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursor = database.rawQuery(
                     "select * from place_types", null)) {
                 if (cursor.moveToFirst()) {
@@ -153,7 +156,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void addPlaceType(String placeType) throws PersistenceException {
         Log.d(APP_NAME, "Добавляю новый тип мест: " + placeType);
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(PlaceType.TYPE_COLUMN, placeType);
             long l = database.insert(PlaceType.TABLE_NAME, null, values);
@@ -167,7 +171,8 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<Place> getPlacesByType(int placeTypeId, boolean withImages) throws PersistenceException {
         Log.d(APP_NAME, "Выбираю места из базы");
         List<Place> places = Collections.EMPTY_LIST;
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursor = database.rawQuery("select * " +
                     "from places where id_place_type = " + placeTypeId, null)) {
                 if (cursor.moveToFirst()) {
@@ -191,7 +196,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public int getPlacesCount() throws PersistenceException {
         Log.d(APP_NAME, "Выполняю получение количество мест в базе");
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursor = database.rawQuery("select count(*) as places_count from "
                     + Place.TABLE_NAME, null)) {
                 if (cursor.moveToFirst()) {
@@ -207,7 +213,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public Map<Integer, String> getCountries() throws PersistenceException {
         Log.d(APP_NAME, "Получаю список стран");
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             Map<Integer, String> countries = new HashMap<>();
             try (Cursor cursor = database.rawQuery("select * from " + Country.TABLE_NAME, null)) {
                 if (cursor.moveToFirst()) {
@@ -227,7 +234,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public long bindImageForPlace(int idImage, int idPlace) throws PersistenceException {
         Log.d(APP_NAME, "Добавляю изображение с ид " + idImage + " для места с ид " + idPlace);
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             ContentValues cv = new ContentValues();
             cv.put(Image.ID_IMAGE_COLUMN, idImage);
             cv.put(Place.ID_PLACE_COLUMN, idPlace);
@@ -243,7 +251,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public long addImage(@NonNull String imageUrl) throws PersistenceException {
         Log.d(APP_NAME, "Вставляю новое изображение");
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(Image.URL_COLUMN, imageUrl);
             long rowNum = database.insert(Image.TABLE_NAME, null, values);
@@ -261,7 +270,8 @@ public class DbHelper extends SQLiteOpenHelper {
     @NonNull
     public List<Image> getImageData(Collection<? extends Number> idsImage) throws PersistenceException {
         Log.d(APP_NAME, "Получаю данные изображения по ид: " + idsImage);
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             StringBuilder builder = new StringBuilder();
             boolean first = true;
             for (Number idImage : idsImage) {
@@ -296,7 +306,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void addPlace(@NonNull Place place) throws PersistenceException {
         Log.d(APP_NAME, "Добавляю новое место: " + place);
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(Place.ADDRESS_COLUMN, place.getAddress());
             values.put(Place.DATE_CREATE_COLUMN, place.getDateCreate());
@@ -338,7 +349,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void addCategoryOfThing(String categoryName) throws PersistenceException {
         Log.d(APP_NAME, "Создаю новую категорию вещей: " + categoryName);
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(CategoryOfThing.CATEGORY_COLUMN, categoryName);
             long l = database.insert(CategoryOfThing.TABLE_NAME,
@@ -351,7 +363,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public Place getPlaceWithImages(int placeId) throws PersistenceException {
         Log.d(APP_NAME, "Выбираю место с изображениями, ид: " + placeId);
-        try (SQLiteDatabase database = getReadableDatabase()) {
+        try {
+            SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursorPlace = database.rawQuery("select *" +
                     " from places where id_place = " + placeId, null)) {
                 if (cursorPlace.moveToFirst()) {
@@ -391,7 +404,8 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void updatePlace(@NonNull Place place) throws PersistenceException {
         int idPlace = place.getIdPlace();
-        try (SQLiteDatabase database = getWritableDatabase()) {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
             Log.d(APP_NAME, "Обновляю место по ид: " + idPlace);
             ContentValues upPlaceData = new ContentValues(6);
             upPlaceData.put(Place.ADDRESS_COLUMN, place.getAddress());

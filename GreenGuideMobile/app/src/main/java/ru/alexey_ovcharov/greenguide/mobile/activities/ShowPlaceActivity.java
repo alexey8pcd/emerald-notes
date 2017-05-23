@@ -52,6 +52,7 @@ public class ShowPlaceActivity extends Activity {
     private static final int CAMERA_REQUEST = 2;
     private RecyclerView imagesView;
     private Uri tempImageUri;
+    private TextView tvPhotos;
 
     private class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
@@ -123,13 +124,13 @@ public class ShowPlaceActivity extends Activity {
     private int selectedPlaceId;
     private Place placeWithImages;
     private List<Image.ImageDataWrapper<Bitmap>> bitmaps;
-    int index;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_place);
         intent = getIntent();
+        tvPhotos = (TextView) findViewById(R.id.aShowPlace_tvTitlePhotos);
         GridLayoutManager layoutManager;
         int orientation = getResources().getConfiguration().orientation;
         if (orientation == ORIENTATION_LANDSCAPE) {
@@ -140,7 +141,7 @@ public class ShowPlaceActivity extends Activity {
         imagesView = (RecyclerView) findViewById(R.id.aShowPlace_rvImages);
         imagesView.setLayoutManager(layoutManager);
 
-        selectedPlaceId = intent.getIntExtra(Commons.PLACE_ID, 0);
+        selectedPlaceId = intent.getIntExtra(Place.ID_PLACE_COLUMN, 0);
         dbHelper = DbHelper.getInstance(getApplicationContext());
         Button bAddImage = (Button) findViewById(R.id.aShowPlaces_bAddImage);
         bAddImage.setOnClickListener(new View.OnClickListener() {
@@ -242,10 +243,12 @@ public class ShowPlaceActivity extends Activity {
             bitmaps = placeWithImages.getImagesBitmaps(dbHelper, getContentResolver());
             try {
                 if (bitmaps != null) {
+                    tvPhotos.setText("Фотографии места, количество: " + bitmaps.size());
                     imagesView.setAdapter(new ImageAdapter(this, bitmaps));
                     if (bitmaps.size() != placeWithImages.getImagesIds().size()) {
                         Toast.makeText(this, "Не все изображения были открыть успешно", Toast.LENGTH_LONG).show();
                     }
+
                 }
             } catch (Exception e) {
                 Log.e(Commons.APP_NAME, e.toString(), e);

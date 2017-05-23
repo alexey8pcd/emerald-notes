@@ -65,14 +65,8 @@ public class Place {
     public static final String IMAGE_FOR_PLACES_CREATE_SCRIPT = "CREATE TABLE "
             + IMAGES_FOR_PLACE_TABLE_NAME + " (" +
             ID_IMAGE_FOR_PLACE_COLUMN + " INTEGER PRIMARY KEY NOT NULL, " +
-            ID_PLACE_COLUMN + " INTEGER NOT NULL " +
-//            "REFERENCES places (id_place) " +
-//            "   ON DELETE RESTRICT ON UPDATE CASCADE, " +
-            "," +
-            Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL " +
-//            "REFERENCES images (id_image)" +
-//            " ON DELETE RESTRICT ON UPDATE CASCADE" +
-            ");";
+            ID_PLACE_COLUMN + " INTEGER NOT NULL " + "," +
+            Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL " + ");";
 
     private int idPlace;
     private String description;

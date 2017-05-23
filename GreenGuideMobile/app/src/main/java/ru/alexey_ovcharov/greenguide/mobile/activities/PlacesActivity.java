@@ -13,6 +13,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
@@ -112,7 +114,7 @@ public class PlacesActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String categoryName = input.getText().toString();
-                if (Commons.isNotEmpty(categoryName)) {
+                if (StringUtils.isNotEmpty(categoryName)) {
                     saveCategory(categoryName);
                     Toast.makeText(PlacesActivity.this,
                             "Категория добавлена", Toast.LENGTH_SHORT).show();
@@ -149,22 +151,6 @@ public class PlacesActivity extends Activity {
         startService(new Intent(this, PublicationService.class));
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (data == null) {
-            return;
-        } else {
-            if (requestCode == REQUEST_CODE_NEW_CATEGORY) {
-                Bundle extras = data.getExtras();
-                String categoryName = data.getStringExtra(Commons.DIALOG_RESULT);
-                if (Commons.isNotEmpty(categoryName))
-                    saveCategory(categoryName);
-
-            } else {
-                Toast.makeText(this, "Категория не создана", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 
 
     private void saveCategory(final String categoryName) {
