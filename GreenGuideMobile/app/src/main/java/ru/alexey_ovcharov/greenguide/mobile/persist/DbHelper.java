@@ -402,6 +402,32 @@ public class DbHelper extends SQLiteOpenHelper {
         return imagesId;
     }
 
+    public void deletePlaceById(int idPlace) throws PersistenceException {
+        Log.d(APP_NAME, "Удаляю место с ид: " + idPlace);
+        SQLiteDatabase database = null;
+        try {
+            database = getWritableDatabase();
+            database.beginTransaction();
+            String[] whereArgs = {String.valueOf(idPlace)};
+            int deleteIfpResult = database.delete(Place.IMAGES_FOR_PLACE_TABLE_NAME, Place.ID_PLACE_COLUMN + "=?",
+                    whereArgs);
+            if (deleteIfpResult > 0) {
+                int deleteResult = database.delete(Place.TABLE_NAME, Place.ID_PLACE_COLUMN + "=?", whereArgs);
+                if (deleteResult > 0) {
+                    database.setTransactionSuccessful();
+                    Log.d(APP_NAME, "Удалено успешно");
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось удалить место с ид: " + idPlace, ex);
+        } finally {
+            if (database != null) {
+                database.endTransaction();
+            }
+        }
+    }
+
     public void updatePlace(@NonNull Place place) throws PersistenceException {
         int idPlace = place.getIdPlace();
         try {
@@ -470,4 +496,5 @@ public class DbHelper extends SQLiteOpenHelper {
     public LatLng getLastKnownCoordinates() {
         return new LatLng(53.36056, 83.76361);
     }
+
 }

@@ -45,7 +45,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.CategoriesOfPlacesActivity" />
-        <activity android:name=".activities.PlacesListInChoosenCategoryActivity" />
+        <activity android:name=".activities.PlacesListInChosenCategoryActivity" />
         <activity android:name=".activities.AddPlaceActivity" />
         <activity
             android:name=".activities.ShowPlaceActivity"

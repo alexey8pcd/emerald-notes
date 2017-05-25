@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ru.alexey_ovcharov.greenguide.mobile.activities.PlacesListInChoosenCategoryActivity">
+    tools:context="ru.alexey_ovcharov.greenguide.mobile.activities.PlacesListInChosenCategoryActivity">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -30,23 +30,38 @@
             android:layout_weight="0.15"
             android:text="Заголовок"
             android:textAlignment="center"
+            android:layout_gravity="center_vertical"
             android:textSize="24sp"/>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
 
         <SearchView
             android:id="@+id/aPlacesList_svFindPlace"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.15"
-            android:visibility="visible"
-            >
+            android:visibility="visible">
 
         </SearchView>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
 
         <ListView
             android:id="@+id/aPlacesList_lvPlaces"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.58"/>
+            android:layout_weight="0.5" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.02" />
 
         <Button
             android:id="@+id/aPlacesList_bAddPlace"

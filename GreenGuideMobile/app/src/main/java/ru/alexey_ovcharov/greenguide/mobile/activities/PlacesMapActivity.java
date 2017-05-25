@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
     private Spinner spCategory;
     private String searchedPlaceName;
     private int chosenPlaceTypeIndex = ALL_CATEGORIES_INDEX;
-    private List<String> categories = new CopyOnWriteArrayList<>();
+    private List<String> categories = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,7 +220,10 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
             protected void onPostExecute(Void aVoid) {
                 try {
                     if (categoriesLocal != null) {
-                        categories.addAll(categoriesLocal);
+                        synchronized (this) {
+                            categories.clear();
+                            categories.addAll(categoriesLocal);
+                        }
                         ((BaseAdapter) spCategory.getAdapter()).notifyDataSetChanged();
                     }
                     googleMap.clear();

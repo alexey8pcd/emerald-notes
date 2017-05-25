@@ -27,7 +27,7 @@ public class CategoriesOfPlacesActivity extends Activity {
                 int idPlaceType = placeType.getIdPlaceType();
                 String placeTypeName = placeType.getType();
                 Intent intent = new Intent(CategoriesOfPlacesActivity.this,
-                        PlacesListInChoosenCategoryActivity.class);
+                        PlacesListInChosenCategoryActivity.class);
                 intent.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
                 intent.putExtra(PlaceType.TYPE_COLUMN, placeTypeName);
                 startActivity(intent);
