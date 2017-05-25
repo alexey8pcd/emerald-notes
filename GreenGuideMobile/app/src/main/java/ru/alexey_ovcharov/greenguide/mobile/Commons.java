@@ -30,10 +30,10 @@ public class Commons {
     public static final int OPEN_TYPE_CHOOSE_LOCATION = 1;
 
     @NonNull
-    public static <T> String[] listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {
-        String[] result = new String[list.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = mapper.map(list.get(i));
+    public static <T> List<String> listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {
+        List<String> result = new ArrayList<>(list.size());
+        for (T item : list) {
+            result.add(mapper.map(item));
         }
         return result;
     }

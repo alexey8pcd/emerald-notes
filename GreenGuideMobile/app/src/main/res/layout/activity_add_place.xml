@@ -36,14 +36,47 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <EditText
-            android:id="@+id/aAddPlace_etDescription"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.16"
-            android:ems="10"
-            android:hint="Описание"
-            android:inputType="textShortMessage"/>
+            android:orientation="horizontal"
+            android:layout_weight="0.13"
+            android:weightSum="1">
+
+            <EditText
+                android:id="@+id/aAddPlace_etDescription"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:ems="10"
+                android:layout_weight="0.5"
+                android:hint="Описание"
+                android:inputType="textShortMessage" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:weightSum="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/aAddPlace_tvCategoryTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.5"
+                    android:text="Категория"
+                    android:textAlignment="center"
+                    android:layout_gravity="center_vertical"
+                    android:textSize="18sp" />
+
+                <Spinner
+                    android:id="@+id/aAddPlace_spCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.5" />
+            </LinearLayout>
+
+        </LinearLayout>
 
         <Space
             android:layout_width="match_parent"
@@ -62,7 +95,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.5"
                 android:checked="true"
-                android:text="Указать адрес" />
+                android:text="Указать адрес вручную"
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/aAddPlace_bChooseAddressOnMap"
@@ -152,14 +186,14 @@
                     android:id="@+id/aAddPlace_bPhotoFromCamera"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="0.5"
+                    android:layout_weight="0.4"
                     android:text="Сделать снимок..." />
 
                 <Button
                     android:id="@+id/aAddPlace_bChoosePhoto"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="0.5"
+                    android:layout_weight="0.4"
                     android:text="Выбрать готовую фотографию..." />
             </LinearLayout>
 

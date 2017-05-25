@@ -121,7 +121,7 @@ public class PublicationService extends Service {
     private String prepareTextRequest() {
         try {
             JSONObject requestJSON = new JSONObject();
-            List<PlaceType> placesTypes = dbHelper.getPlacesTypes();
+            List<PlaceType> placesTypes = dbHelper.getPlacesTypesSorted();
             JSONArray placeTypesJsonArray = createPlaceTypes(placesTypes);
             List<Place> places = getAllPlaces(placesTypes);
             JSONArray placesJsonArray = createPlaces(places);

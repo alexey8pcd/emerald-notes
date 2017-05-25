@@ -130,13 +130,13 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     @NonNull
-    public List<PlaceType> getPlacesTypes() {
+    public List<PlaceType> getPlacesTypesSorted() {
         Log.d(APP_NAME, "Выбираю типы мест из базы");
         List<PlaceType> placeTypes = Collections.EMPTY_LIST;
         try {
             SQLiteDatabase database = getReadableDatabase();
             try (Cursor cursor = database.rawQuery(
-                    "select * from place_types", null)) {
+                    "select * from place_types order by " + PlaceType.TYPE_COLUMN, null)) {
                 if (cursor.moveToFirst()) {
                     placeTypes = new ArrayList<>();
                     do {

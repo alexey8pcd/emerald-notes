@@ -45,8 +45,8 @@ public class CategoriesOfPlacesActivity extends Activity {
         setContentView(R.layout.activity_places_categories);
         lvPlaceTypes = (ListView)findViewById(R.id.aPlacesCategories_lvCategories);
         dbHelper = DbHelper.getInstance(getApplicationContext());
-        placeTypes = dbHelper.getPlacesTypes();
-        String[] placeTypeNames = Commons.listToStringArray(placeTypes, new Mapper<PlaceType>() {
+        placeTypes = dbHelper.getPlacesTypesSorted();
+        List<String> placeTypeNames = Commons.listToStringArray(placeTypes, new Mapper<PlaceType>() {
             @Override
             public String map(PlaceType item) {
                 return item.getType();

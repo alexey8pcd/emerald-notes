@@ -2,16 +2,19 @@ package ru.alexey_ovcharov.greenguide.mobile.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
@@ -25,16 +28,7 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 public class PlacesListInChoosenCategoryActivity extends Activity {
 
     private static final int ADD_PLACE_REQUEST = 1;
-
-    private class ButtonAddPlaceOnClickListener implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            Intent intentAddPlace = new Intent(PlacesListInChoosenCategoryActivity.this, AddPlaceActivity.class);
-            intentAddPlace.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, placeTypeId);
-            startActivityForResult(intentAddPlace, ADD_PLACE_REQUEST);
-        }
-    }
-
+    private List<String> placeList = new CopyOnWriteArrayList<>();
     private int placeTypeId;
     private ListView lvPlaces;
     private DbHelper dbHelper;
@@ -55,46 +49,71 @@ public class PlacesListInChoosenCategoryActivity extends Activity {
         lvPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent showPlaceIntent = new Intent(PlacesListInChoosenCategoryActivity.this, ShowPlaceActivity.class);
+                Intent showPlaceIntent = new Intent(PlacesListInChoosenCategoryActivity.this,
+                        ShowPlaceActivity.class);
                 showPlaceIntent.putExtra(Place.ID_PLACE_COLUMN, places.get(position).getIdPlace());
                 startActivity(showPlaceIntent);
             }
         });
         placeTypeId = intent.getIntExtra(PlaceType.ID_PLACE_TYPE_COLUMN, -1);
-        updatePlacesList();
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, placeList);
+        lvPlaces.setAdapter(adapter);
 
         Button addPlace = (Button) findViewById(R.id.aPlacesList_bAddPlace);
         addPlace.setOnClickListener(new ButtonAddPlaceOnClickListener());
+
+        updatePlacesListAsync();
     }
 
-    private void updatePlacesList() {
-        try {
-            places = dbHelper.getPlacesByType(placeTypeId, false);
-            String[] placeAddresses = Commons.listToStringArray(places, new Mapper<Place>() {
-                @Override
-                public String map(Place item) {
-                    String address = item.getAddress();
-                    if (address != null) {
-                        return item.getDescription() + ", " + address;
-                    } else {
-                        return item.getDescription();
-                    }
-                }
-            });
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                    android.R.layout.simple_list_item_1, placeAddresses);
-            lvPlaces.setAdapter(adapter);
-        } catch (Exception e) {
-            Log.e(APP_NAME, e.toString(), e);
-        }
+    private void updatePlacesListAsync() {
+        new AsyncTask<Void, Void, Void>() {
 
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    places = dbHelper.getPlacesByType(placeTypeId, false);
+                    List<String> placeListLocal = Commons.listToStringArray(places, new Mapper<Place>() {
+                        @Override
+                        public String map(Place item) {
+                            String address = item.getAddress();
+                            if (address != null) {
+                                return item.getDescription() + ", " + address;
+                            } else {
+                                return item.getDescription();
+                            }
+                        }
+                    });
+                    placeList.clear();
+                    placeList.addAll(placeListLocal);
+                } catch (Exception e) {
+                    Log.e(APP_NAME, e.toString(), e);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                ((BaseAdapter) lvPlaces.getAdapter()).notifyDataSetChanged();
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
+    }
+
+    private class ButtonAddPlaceOnClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            Intent intentAddPlace = new Intent(PlacesListInChoosenCategoryActivity.this, AddPlaceActivity.class);
+            intentAddPlace.putExtra(PlaceType.ID_PLACE_TYPE_COLUMN, placeTypeId);
+            startActivityForResult(intentAddPlace, ADD_PLACE_REQUEST);
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ADD_PLACE_REQUEST) {
-            updatePlacesList();
+            updatePlacesListAsync();
         }
     }
 }

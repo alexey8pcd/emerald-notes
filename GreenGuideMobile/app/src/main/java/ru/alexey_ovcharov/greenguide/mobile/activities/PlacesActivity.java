@@ -64,24 +64,8 @@ public class PlacesActivity extends Activity {
                 startActivity(new Intent(PlacesActivity.this, PlacesMapActivity.class));
             }
         });
-
-        showPlacesCountFromDb();
-
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                int placesCount = 0;
-                try {
-                    placesCount = dbHelper.getPlacesCount();
-                    String text = "Всего мест в базе: " + placesCount;
-                    tvPlacesInfo.setText(text);
-                } catch (PersistenceException e) {
-                    tvPlacesInfo.setText("Не удалсь получить количество мест из базы");
-                    e.log();
-                }
-            }
-        });
+        showPlacesCountFromDb();
     }
 
     private void publicPlacesReference() {
@@ -136,13 +120,29 @@ public class PlacesActivity extends Activity {
     private void showPlacesCountFromDb() {
         new AsyncTask<Void, Void, Void>() {
 
+            private String text;
+
             @Override
             protected Void doInBackground(Void... params) {
                 DbHelper dbHelper = DbHelper.getInstance(getApplicationContext());
-                if (dbHelper.getSettingByName(SERVER_URL) == null) {
-                    dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080");
+                try {
+                    int placesCount = dbHelper.getPlacesCount();
+                    text = "Всего мест в базе: " + placesCount;
+
+                    if (dbHelper.getSettingByName(SERVER_URL) == null) {
+                        dbHelper.putSetting(SERVER_URL, "http://192.168.1.33:8080");
+                    }
+                } catch (PersistenceException e) {
+                    text = "Не удалсь получить количество мест из базы";
+                    e.log();
                 }
                 return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                tvPlacesInfo.setText(text);
+                super.onPostExecute(aVoid);
             }
         }.execute();
     }
@@ -150,7 +150,6 @@ public class PlacesActivity extends Activity {
     private void startPublicationService() {
         startService(new Intent(this, PublicationService.class));
     }
-
 
 
     private void saveCategory(final String categoryName) {
