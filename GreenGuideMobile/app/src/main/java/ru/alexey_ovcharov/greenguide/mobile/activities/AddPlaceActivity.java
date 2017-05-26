@@ -163,7 +163,6 @@ public class AddPlaceActivity extends Activity {
                         addressComplete = country + ", " + state + ", " + city
                                 + ", " + address + ", (" + knownName + ")";
                     }
-
                 } catch (Exception ex) {
                     Log.e(APP_NAME, ex.toString(), ex);
                 }
@@ -172,6 +171,7 @@ public class AddPlaceActivity extends Activity {
 
             @Override
             protected void onPostExecute(Void aVoid) {
+                etAddress.setVisibility(View.VISIBLE);
                 etAddress.setText(addressComplete);
                 super.onPostExecute(aVoid);
             }

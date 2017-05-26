@@ -104,23 +104,32 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
         this.googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng latLng) {
-                AlertDialog.Builder ad = new AlertDialog.Builder(PlacesMapActivity.this);
-                ad.setTitle("Добавление места");
-                ad.setMessage("Создать запись о данном месте?");
-                ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        Intent intent = new Intent(PlacesMapActivity.this, AddPlaceActivity.class);
-                        intent.putExtra(Place.LATITUDE_COLUMN, latLng.latitude);
-                        intent.putExtra(Place.LONGITUDE_COLUMN, latLng.longitude);
-                        startActivityForResult(intent, CREATE_PLACE_REQUEST);
-                    }
-                });
-                ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        //ничего не делаем
-                    }
-                });
-                ad.show();
+                if (mapOpenType != Commons.OPEN_TYPE_CHOOSE_LOCATION) {
+                    AlertDialog.Builder ad = new AlertDialog.Builder(PlacesMapActivity.this);
+                    ad.setTitle("Добавление места");
+                    ad.setMessage("Создать запись о данном месте?");
+                    ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            Intent intent = new Intent(PlacesMapActivity.this, AddPlaceActivity.class);
+                            intent.putExtra(Place.LATITUDE_COLUMN, latLng.latitude);
+                            intent.putExtra(Place.LONGITUDE_COLUMN, latLng.longitude);
+                            startActivityForResult(intent, CREATE_PLACE_REQUEST);
+                        }
+                    });
+                    ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            //ничего не делаем
+                        }
+                    });
+                    ad.show();
+                } else {
+                    Intent intent = new Intent();
+                    intent.putExtra(Place.LATITUDE_COLUMN, latLng.latitude);
+                    intent.putExtra(Place.LONGITUDE_COLUMN, latLng.longitude);
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }
+
             }
         });
         this.googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {

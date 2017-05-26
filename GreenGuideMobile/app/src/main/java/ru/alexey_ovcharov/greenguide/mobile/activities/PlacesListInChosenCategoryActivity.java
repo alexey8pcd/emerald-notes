@@ -105,12 +105,7 @@ public class PlacesListInChosenCategoryActivity extends Activity {
                     List<String> placeListLocal = Commons.listToStringArray(places, new Mapper<Place>() {
                         @Override
                         public String map(Place item) {
-                            String address = item.getAddress();
-                            if (address != null) {
-                                return item.getDescription() + ", " + address;
-                            } else {
-                                return item.getDescription();
-                            }
+                            return item.getDescription();
                         }
                     });
                     placeList.clear();

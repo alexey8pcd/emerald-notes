@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
@@ -27,13 +26,13 @@ public class PlacesActivity extends Activity {
 
     private DbHelper dbHelper;
     private TextView tvPlacesInfo;
-    private static final int REQUEST_CODE_NEW_CATEGORY = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_places);
         dbHelper = DbHelper.getInstance(getApplicationContext());
+
         Button bShowList = (Button) findViewById(R.id.aPlaces_bAsList);
         bShowList.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,6 +41,15 @@ public class PlacesActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        Button addPlace = (Button) findViewById(R.id.aPlaces_bAddPlace);
+        addPlace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(PlacesActivity.this, AddPlaceActivity.class));
+            }
+        });
+
         Button bNewCategory = (Button) findViewById(R.id.aPlaces_bNewCategory);
         bNewCategory.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,6 +57,7 @@ public class PlacesActivity extends Activity {
                 addNewCategory();
             }
         });
+
         Button bPublicAll = (Button) findViewById(R.id.aPlaces_bPublicAll);
         bPublicAll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,6 +66,7 @@ public class PlacesActivity extends Activity {
 
             }
         });
+
         Button bPlacesOnMap = (Button) findViewById(R.id.aPlaces_bAsMap);
         bPlacesOnMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +75,19 @@ public class PlacesActivity extends Activity {
             }
         });
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
-        showPlacesCountFromDb();
+        showPlacesCountFromDbAsync();
+    }
+
+    @Override
+    protected void onResume() {
+        showPlacesCountFromDbAsync();
+        super.onResume();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        showPlacesCountFromDbAsync();
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void publicPlacesReference() {
@@ -117,7 +139,7 @@ public class PlacesActivity extends Activity {
         ad.show();
     }
 
-    private void showPlacesCountFromDb() {
+    private void showPlacesCountFromDbAsync() {
         new AsyncTask<Void, Void, Void>() {
 
             private String text;

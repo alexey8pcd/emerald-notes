@@ -77,6 +77,13 @@
                 android:textAlignment="center"/>
 
             <Button
+                android:id="@+id/aPlaces_bAddPlace"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.15"
+                android:text="Добавить место..." />
+
+            <Button
                 android:id="@+id/aPlaces_bNewCategory"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
