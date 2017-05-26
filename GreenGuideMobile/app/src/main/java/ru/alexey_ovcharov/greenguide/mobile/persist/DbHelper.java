@@ -346,21 +346,6 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-
-    public void addCategoryOfThing(String categoryName) throws PersistenceException {
-        Log.d(APP_NAME, "Создаю новую категорию вещей: " + categoryName);
-        try {
-            SQLiteDatabase database = getWritableDatabase();
-            ContentValues values = new ContentValues();
-            values.put(CategoryOfThing.CATEGORY_COLUMN, categoryName);
-            long l = database.insert(CategoryOfThing.TABLE_NAME,
-                    CategoryOfThing.ID_CATEGORY_COLUMN, values);
-            Log.d(APP_NAME, "Ид созданной строки: " + l);
-        } catch (Exception e) {
-            throw new PersistenceException("Не удалось добавить категорию вещей", e);
-        }
-    }
-
     public Place getPlaceWithImages(int placeId) throws PersistenceException {
         Log.d(APP_NAME, "Выбираю место с изображениями, ид: " + placeId);
         try {
@@ -497,4 +482,39 @@ public class DbHelper extends SQLiteOpenHelper {
         return new LatLng(53.36056, 83.76361);
     }
 
+    public void saveCategoryOfThing(String refName) throws PersistenceException {
+        Log.d(APP_NAME, "Добавляю новый справочник/категорию вещей: " + refName);
+        try {
+            SQLiteDatabase database = getWritableDatabase();
+            ContentValues cv = new ContentValues();
+            cv.put(CategoryOfThing.CATEGORY_COLUMN, refName);
+            long insert = database.insert(CategoryOfThing.TABLE_NAME, null, cv);
+            if (insert > 0) {
+                Log.d(APP_NAME, "Справочник/категория вещей добавлены");
+            }
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось создать справочник/категорию вещей", ex);
+        }
+    }
+
+    public List<CategoryOfThing> getAllCategoryOfThingsSorted() throws PersistenceException {
+        Log.d(APP_NAME, "Выбираю справочники/категории вещей");
+        try {
+            SQLiteDatabase database = getReadableDatabase();
+            Cursor cursor = database.rawQuery("select * from " + CategoryOfThing.TABLE_NAME
+                    + " order by " + CategoryOfThing.CATEGORY_COLUMN, null);
+            List<CategoryOfThing> categoryOfThings = new ArrayList<>();
+            if (cursor.moveToFirst()) {
+                do {
+                    int idCategory = cursor.getInt(cursor.getColumnIndex(CategoryOfThing.ID_CATEGORY_COLUMN));
+                    String categoryName = cursor.getString(cursor.getColumnIndex(CategoryOfThing.CATEGORY_COLUMN));
+                    categoryOfThings.add(new CategoryOfThing(idCategory, categoryName));
+                } while (cursor.moveToNext());
+            }
+            Log.d(APP_NAME, "Выбрано справочников/категорий: " + categoryOfThings.size());
+            return categoryOfThings;
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось получить справочники/категории вещей", ex);
+        }
+    }
 }

@@ -17,7 +17,13 @@ public class CategoryOfThing {
     private int idCategory;
     private String category;
 
+    public CategoryOfThing(int idCategory, String categoryName) {
+        this.idCategory = idCategory;
+        this.category = categoryName;
+    }
+
     public CategoryOfThing() {
+
     }
 
     public int getIdCategory() {

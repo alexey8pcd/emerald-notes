@@ -49,6 +49,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        Button bReferences = (Button) findViewById(R.id.aMain_bReferences);
+        bReferences.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, ReferencesActivity.class));
+            }
+        });
+
     }
 
 }
