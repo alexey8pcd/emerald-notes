@@ -1,14 +1,20 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 import android.content.ContentResolver;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Base64;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
+
+import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
 
 /**
  * Created by Алексей on 05.05.2017.
@@ -22,14 +28,21 @@ public class Image {
     public static final String DROP_SCRIPT = "DROP TABLE IF EXISTS " + TABLE_NAME;
     public static final String CREATE_SCRIPT = "CREATE TABLE " + TABLE_NAME + " ("
             + ID_IMAGE_COLUMN + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-            URL_COLUMN + " VARCHAR);";
+            URL_COLUMN + " VARCHAR, " +
+            GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
 
     private int idImage;
     private String url;
+    private String guid;
 
-    public Image(int idImage, String url) {
-        this.idImage = idImage;
-        this.url = url;
+    public Image(Cursor cursor) {
+        idImage = cursor.getInt(cursor.getColumnIndex(ID_IMAGE_COLUMN));
+        url = cursor.getString(cursor.getColumnIndex(URL_COLUMN));
+        guid = cursor.getString(cursor.getColumnIndex(Entity.GUID_COLUMN_NAME));
+    }
+
+    public String getGuid() {
+        return guid;
     }
 
     public Image() {
@@ -51,7 +64,16 @@ public class Image {
         this.url = url;
     }
 
-    public String encodeDataAsBase64(ContentResolver contentResolver) throws IOException {
+    public JSONObject toJsonObject(ContentResolver contentResolver) throws IOException, JSONException {
+        String base64 = encodeDataAsBase64(contentResolver);
+        JSONObject imageData = new JSONObject();
+        imageData.put(Image.ID_IMAGE_COLUMN, idImage);
+        imageData.put(Image.BINARY_DATA_COLUMN, base64);
+        imageData.put(Entity.GUID_COLUMN_NAME, guid);
+        return imageData;
+    }
+
+    private String encodeDataAsBase64(ContentResolver contentResolver) throws IOException {
         if (url != null) {
             Uri imageUrl = Uri.parse(url);
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUrl);

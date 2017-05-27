@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.services.PublicationService;
 
+import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.SERVER_URL;
 
 public class PlacesActivity extends Activity {
@@ -46,7 +48,7 @@ public class PlacesActivity extends Activity {
         addPlace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(PlacesActivity.this, AddPlaceActivity.class));
+                addPlace();
             }
         });
 
@@ -76,6 +78,35 @@ public class PlacesActivity extends Activity {
         });
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
         showPlacesCountFromDbAsync();
+    }
+
+    private void addPlace() {
+        new AsyncTask<Void, Void, Void>() {
+
+            public int categoriesCount;
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    categoriesCount = dbHelper.getPlacesTypesSorted().size();
+                } catch (Exception ex) {
+                    Log.e(APP_NAME, ex.toString(), ex);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                if (categoriesCount > 0) {
+                    startActivity(new Intent(PlacesActivity.this, AddPlaceActivity.class));
+                } else {
+                    Toast.makeText(PlacesActivity.this, "Не создано ни одной категории", Toast.LENGTH_SHORT).show();
+                }
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
+
+
     }
 
     @Override

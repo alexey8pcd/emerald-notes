@@ -7,4 +7,6 @@ import java.lang.annotation.Documented;
  */
 @Documented
 @interface Entity {
+
+    public static final String GUID_COLUMN_NAME = "guid";
 }

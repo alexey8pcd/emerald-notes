@@ -85,7 +85,7 @@ public class ReferencesActivity extends Activity {
 
     private void addNewCategory() {
         AlertDialog.Builder ad = new AlertDialog.Builder(this);
-        ad.setTitle("Введите название справочника");
+        ad.setTitle("Введите название раздела");
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
         ad.setView(input);
@@ -97,10 +97,10 @@ public class ReferencesActivity extends Activity {
                     saveRef(refName);
                     getCategoriesAsync();
                     Toast.makeText(ReferencesActivity.this,
-                            "Справочник добавлен", Toast.LENGTH_SHORT).show();
+                            "Раздел добавлен", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(ReferencesActivity.this,
-                            "Название справоченика не может быть пустым", Toast.LENGTH_SHORT).show();
+                            "Название раздела не может быть пустым", Toast.LENGTH_SHORT).show();
                 }
             }
         });

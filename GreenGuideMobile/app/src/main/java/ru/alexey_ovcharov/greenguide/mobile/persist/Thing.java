@@ -1,5 +1,7 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
+
 /**
  * Created by Алексей on 29.04.2017.
  */
@@ -25,18 +27,20 @@ public class Thing {
             DECOMPOSITION_TIME_COLUMN + " INTEGER, " +
             ID_COUNTRY_COLUMN + " INTEGER REFERENCES countries (id_country) " +
             "   ON DELETE RESTRICT ON UPDATE CASCADE, id_category INTEGER NOT NULL " +
-            "   REFERENCES categories_of_things (id_category) ON DELETE RESTRICT ON UPDATE CASCADE);";
+            "   REFERENCES categories_of_things (id_category) ON DELETE RESTRICT ON UPDATE CASCADE, " +
+            Entity.GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
     public static final String IMAGE_FOR_THING_TABLE_NAME = "images_for_thing";
     public static final String ID_IMAGE_FOR_THING_COLUMN = "id_image_for_thing";
     public static final String IMAGE_COLUMN = "image";
 
-    public static final String IMAGE_FOR_THING_DROP_SCRIPT = "DROP TABLE IF EXISTS " + IMAGE_FOR_THING_TABLE_NAME + ";";
+    public static final String IMAGE_FOR_THING_DROP_SCRIPT = "DROP TABLE IF EXISTS "
+            + IMAGE_FOR_THING_TABLE_NAME + ";";
     public static final String IMAGE_FOR_THING_CREATE_SCRIPT =
             "CREATE TABLE " + IMAGE_FOR_THING_TABLE_NAME + " (" +
                     ID_IMAGE_FOR_THING_COLUMN + " INTEGER NOT NULL, " +
                     ID_THING_COLUMN + " INTEGER NOT NULL REFERENCES things (id_thing) " +
                     "           ON DELETE RESTRICT ON UPDATE CASCADE, " +
-                    IMAGE_COLUMN + " VARCHAR NOT NULL);";
+                    IMAGE_COLUMN + " VARCHAR NOT NULL)";
 
 
     private int idThing;
@@ -46,8 +50,13 @@ public class Thing {
     private int decompositionTime;
     private int idCountry;
     private int idCategory;
+    private String guid;
 
     public Thing() {
+    }
+
+    public String getGuid() {
+        return guid;
     }
 
     public int getIdThing() {

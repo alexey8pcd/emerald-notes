@@ -20,28 +20,53 @@
         tools:layout_constraintTop_creator="1">
 
         <TextView
+            android:id="@+id/aSettings_tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1"
+            android:text="Настройки"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:textSize="24sp"/>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.07" />
+
+        <TextView
             android:id="@+id/aSettings_tvServerAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.1"
             android:text="Адрес сервера"
             android:textAlignment="center"
-            android:textSize="24sp"/>
+            android:textSize="24sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.04" />
 
         <EditText
             android:id="@+id/aSettings_etServerAddress"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="0.1"
             android:ems="10"
             android:hint="Адрес сервера"
             android:inputType="textPersonName"/>
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.04" />
+
         <Button
             android:id="@+id/aSettings_bApply"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="0.1"
+            android:background="@color/app_color"
             android:text="Применить"/>
 
     </LinearLayout>

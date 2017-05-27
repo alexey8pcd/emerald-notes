@@ -30,6 +30,8 @@ import java.util.Map;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 
+import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
+
 /**
  * Created by Алексей on 23.04.2017.
  */
@@ -57,7 +59,8 @@ public class Place {
             ID_PLACE_TYPE_COLUMN + " INTEGER NOT NULL REFERENCES " +
             "       place_types (id_place_type) ON DELETE RESTRICT ON UPDATE CASCADE, " +
             ID_COUNTRY_COLUMN + " INTEGER REFERENCES countries (id_country) " +
-            "   ON DELETE RESTRICT ON UPDATE CASCADE);";
+            "   ON DELETE RESTRICT ON UPDATE CASCADE, " +
+            GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
 
     public static final String IMAGES_FOR_PLACE_TABLE_NAME = "images_for_place";
     public static final String ID_IMAGE_FOR_PLACE_COLUMN = "id_image_for_place";
@@ -66,7 +69,7 @@ public class Place {
             + IMAGES_FOR_PLACE_TABLE_NAME + " (" +
             ID_IMAGE_FOR_PLACE_COLUMN + " INTEGER PRIMARY KEY NOT NULL, " +
             ID_PLACE_COLUMN + " INTEGER NOT NULL " + "," +
-            Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL " + ");";
+            Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL)";
 
     private int idPlace;
     private String description;
@@ -78,6 +81,7 @@ public class Place {
     private Integer idCountry;
     private List<Integer> imagesInfo = new ArrayList<>(1);
     private LatLng location;
+    private String guid;
 
     public List<Integer> getImagesIds() {
         return imagesInfo;
@@ -119,6 +123,7 @@ public class Place {
         } else {
             longitude = new BigDecimal(cursor.getString(columnIndexLongitude));
         }
+        guid = cursor.getString(cursor.getColumnIndex(Entity.GUID_COLUMN_NAME));
     }
 
     public BigDecimal getLatitude() {
@@ -153,14 +158,9 @@ public class Place {
                 ", idPlaceType=" + idPlaceType +
                 ", idCountry=" + idCountry +
                 ", imagesInfo=" + imagesInfo +
+                ", location=" + location +
+                ", guid='" + guid + '\'' +
                 '}';
-    }
-
-    public void setDateCreate(String dateYYYY_MM_DD) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(Commons.SQL_DATE_FORMAT);
-        dateFormat.setLenient(true);
-        dateFormat.parse(dateYYYY_MM_DD);
-        this.dateCreate = dateYYYY_MM_DD;
     }
 
     public void setDateCreate(Date dateCreate) {
@@ -223,6 +223,7 @@ public class Place {
         jsonObject.put(LONGITUDE_COLUMN, longitude);
         jsonObject.put(DATE_CREATE_COLUMN, dateCreate);
         jsonObject.put(ID_PLACE_TYPE_COLUMN, idPlaceType);
+        jsonObject.put(Entity.GUID_COLUMN_NAME, guid);
         JSONArray imagesJsonArray = new JSONArray();
         for (Integer imageId : imagesInfo) {
             imagesJsonArray.put(imageId);

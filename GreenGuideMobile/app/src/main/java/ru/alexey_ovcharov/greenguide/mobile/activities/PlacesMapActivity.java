@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -37,7 +38,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.Mapper;
@@ -101,6 +101,15 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
         Log.d(APP_NAME, "Карта загрузилась");
         this.googleMap = googleMap;
         markerPlaceMap.clear();
+        this.googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if (mapOpenType == Commons.OPEN_TYPE_CHOOSE_LOCATION) {
+                    Toast.makeText(PlacesMapActivity.this, "Держите долго для выбора",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         this.googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng latLng) {
@@ -116,11 +125,7 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
                             startActivityForResult(intent, CREATE_PLACE_REQUEST);
                         }
                     });
-                    ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-                            //ничего не делаем
-                        }
-                    });
+                    ad.setNegativeButton("Нет", null);
                     ad.show();
                 } else {
                     Intent intent = new Intent();
@@ -156,11 +161,37 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
         if (mapOpenType != Commons.OPEN_TYPE_CHOOSE_LOCATION) {
             fillMapAsync();
         }
-        LatLng lastKnownCoordinates = dbHelper.getLastKnownCoordinates();
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(lastKnownCoordinates);
-        this.googleMap.moveCamera(cameraUpdate);
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(11);
-        this.googleMap.animateCamera(zoom);
+        mapToLastKnownCoordiatesAsync();
+    }
+
+    private void mapToLastKnownCoordiatesAsync() {
+        new AsyncTask<Void, Void, Void>() {
+
+            LatLng lastKnownCoordinates;
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    Thread.sleep(500);
+                    lastKnownCoordinates = dbHelper.getLastKnownCoordinates();
+                } catch (Exception e) {
+                    Log.e(APP_NAME, e.toString(), e);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                if (lastKnownCoordinates != null) {
+                    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(lastKnownCoordinates);
+                    googleMap.moveCamera(cameraUpdate);
+                    CameraUpdate zoom = CameraUpdateFactory.zoomTo(11);
+                    googleMap.animateCamera(zoom);
+                }
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
+
     }
 
     @Override
@@ -204,7 +235,7 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
                                 if (latLng != null) {
                                     String description = place.getDescription();
                                     if (StringUtils.isEmpty(searchedPlaceName)
-                                            || StringUtils.containsIgnoreCase(description, searchedPlaceName)) {
+                                            || StringUtils.containsIgnoreCase(description, searchedPlaceName.trim())) {
                                         MarkerOptions markerOptions = new MarkerOptions();
                                         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(color));
                                         markerOptions.position(latLng);

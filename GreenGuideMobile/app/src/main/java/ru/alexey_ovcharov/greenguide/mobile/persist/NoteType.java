@@ -1,5 +1,7 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
+
 /**
  * Created by Алексей on 29.04.2017.
  */
@@ -14,10 +16,12 @@ public class NoteType {
     public static final String CREATE_SCRIPT = "CREATE TABLE " + TABLE_NAME
             + " (" + ID_NOTE_TYPE_COLUMN + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             NOTE_TYPE_COLUMN + "TEXT NOT NULL, " +
-            NOTE_TYPE_COLUMN + " VARCHAR (100) NOT NULL)";
+            NOTE_TYPE_COLUMN + " VARCHAR (100) NOT NULL, "
+            + GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
 
     private int idNoteType;
     private String noteType;
+    private String guid;
 
     public NoteType() {
     }

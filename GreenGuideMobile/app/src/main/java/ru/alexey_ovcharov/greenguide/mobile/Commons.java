@@ -8,6 +8,8 @@ import android.support.annotation.StringRes;
 import android.util.Base64;
 import android.util.Log;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +30,7 @@ public class Commons {
     public static final String SERVER_URL = "server_url";
     public static final String MAP_OPEN_TYPE = "mapOpenType";
     public static final int OPEN_TYPE_CHOOSE_LOCATION = 1;
+    public static final String SELECTED_IMAGE_URI = "selectedImageUri";
 
     @NonNull
     public static <T> List<String> listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {
@@ -63,5 +66,17 @@ public class Commons {
             return null;
         }
         return photo;
+    }
+
+    public static boolean stringsAreBlank(String... strings) {
+        if (strings == null || strings.length == 0) {
+            return true;
+        }
+        for (String s : strings) {
+            if (StringUtils.isNotBlank(s)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

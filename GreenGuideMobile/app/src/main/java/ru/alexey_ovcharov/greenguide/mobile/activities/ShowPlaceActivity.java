@@ -60,7 +60,7 @@ public class ShowPlaceActivity extends Activity {
         public ImageViewHolder(View itemView) {
             super(itemView);
             imageView = (ImageView) itemView.findViewById(R.id.custom_image);
-            imageView.setScaleType(ImageView.ScaleType.FIT_START);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

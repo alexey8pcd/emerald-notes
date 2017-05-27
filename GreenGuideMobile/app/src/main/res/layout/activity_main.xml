@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,71 +9,122 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical"
         android:weightSum="1"
-        tools:layout_constraintTop_creator="1"
-        tools:layout_constraintRight_creator="1"
-        tools:layout_constraintBottom_creator="1"
-        android:layout_marginStart="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginTop="8dp"
-        tools:layout_constraintLeft_creator="1"
-        android:layout_marginBottom="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_constraintBottom_creator="1"
+        tools:layout_constraintLeft_creator="1"
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintTop_creator="1">
 
         <TextView
             android:id="@+id/aMain_tvMainMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.12"
+            android:layout_marginBottom="3dp"
+            android:layout_marginTop="3dp"
+            android:gravity="center"
             android:text="Главное меню"
             android:textAlignment="center"
             android:textSize="24sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.05" />
 
         <Button
             android:id="@+id/aMain_bReferences"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:text="Справочники"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Энциклопедия" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
 
         <Button
             android:id="@+id/aMain_bPlaces"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:text="Места"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Места" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
 
         <Button
             android:id="@+id/aMain_bNotes"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:text="Полезная информация"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Полезная информация" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
 
         <Button
             android:id="@+id/aMain_bLogin"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:text="Войти в учетную запись"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Войти в учетную запись" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
 
         <Button
             android:id="@+id/aMain_bSettings"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.16"
-            android:text="Настройки"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Настройки" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
+
+        <Button
+            android:id="@+id/aMain_bAbout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="О программе" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.01" />
 
         <Button
             android:id="@+id/aMain_bExit"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.16"
-            android:text="Выход"/>
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
+            android:text="Выход" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

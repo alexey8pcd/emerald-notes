@@ -36,7 +36,7 @@
                 android:id="@+id/aRefer_tvTitle"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:text="Справочники"
+                android:text="Энциклопедия"
                 android:textAlignment="center"
                 android:gravity="center"
                 android:textSize="24sp"
@@ -51,12 +51,12 @@
                 android:id="@+id/aRefer_bAddRefer"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.30"
-                android:background="#00AA20"
+                android:layout_weight="0.32"
+                android:background="@color/app_color"
                 android:elevation="0dp"
-                android:text="Добавить..."
+                android:text="Добавить раздел..."
                 android:textAllCaps="false"
-                android:textSize="16sp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 

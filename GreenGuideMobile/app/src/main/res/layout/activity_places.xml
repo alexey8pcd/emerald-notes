@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -42,14 +41,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="0.1"
+                android:gravity="center"
                 android:text="Места"
                 android:textAlignment="center"
                 android:textSize="24sp" />
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.02" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
+                android:layout_weight="0.12"
                 android:orientation="horizontal"
                 android:weightSum="1">
 
@@ -57,52 +62,90 @@
                     android:id="@+id/aPlaces_bAsMap"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="0.5"
-                    android:text="Карта"/>
+                    android:layout_weight="0.49"
+                    android:background="@color/app_color"
+                    android:text="Карта" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.02" />
 
                 <Button
                     android:id="@+id/aPlaces_bAsList"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="0.5"
+                    android:layout_weight="0.49"
+                    android:background="@color/app_color"
                     android:text="Список по категориям" />
             </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.02" />
 
             <TextView
                 android:id="@+id/aPlaces_tvPlacesInfo"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
+                android:layout_weight="0.05"
+                android:gravity="center"
                 android:text="Всего мест в базе: выполняется получение данных..."
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:textSize="14sp" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.05" />
 
             <Button
                 android:id="@+id/aPlaces_bAddPlace"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
+                android:layout_weight="0.12"
+                android:background="@color/app_color"
                 android:text="Добавить место..." />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.01" />
 
             <Button
                 android:id="@+id/aPlaces_bNewCategory"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
-                android:text="Новая категория мест..."/>
+                android:background="@color/app_color"
+                android:layout_weight="0.12"
+                android:text="Новая категория мест..." />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.01" />
 
             <Button
                 android:id="@+id/aPlaces_buttonUpdateAll"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
-                android:text="Обновить все"/>
+                android:background="@color/app_color"
+                android:layout_weight="0.12"
+                android:text="Обновить все" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.01" />
 
             <Button
                 android:id="@+id/aPlaces_bPublicAll"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.15"
-                android:text="Опубликовать все"/>
+                android:background="@color/app_color"
+                android:layout_weight="0.12"
+                android:text="Опубликовать все" />
         </LinearLayout>
     </LinearLayout>
 

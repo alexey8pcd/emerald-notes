@@ -158,11 +158,7 @@ public class PlacesListInChosenCategoryActivity extends Activity {
                     updatePlacesListAsync();
                 }
             });
-            ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int arg1) {
-                    //ничего не делаем
-                }
-            });
+            ad.setNegativeButton("Нет", null);
             ad.show();
             return true;
         }

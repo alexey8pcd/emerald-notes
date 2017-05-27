@@ -2,6 +2,8 @@ package ru.alexey_ovcharov.greenguide.mobile.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -18,6 +20,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewPropertyAnimator;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -28,6 +31,8 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -51,10 +56,12 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
 public class AddPlaceActivity extends Activity {
 
+    public static final int PLACE_TYPE_ID_UNDEFINED = 0;
     public static final int PICK_IMAGE_REQUEST = 1;
     private static final int CAMERA_REQUEST = 2;
     private static final int GET_COORDINATES_FROM_MAP_REQUEST = 3;
-    public static final int PLACE_TYPE_ID_UNDEFINED = 0;
+    public static final String DEFAULT_LATITUDE_TEXT = "Широта";
+    public static final String DEFAULT_LONGITUDE_TEXT = "Долгота";
     private Uri tempImageUri;
     private Button bChooseAddressOnMap;
     private EditText etDescription;
@@ -130,18 +137,25 @@ public class AddPlaceActivity extends Activity {
         bTakePhoto.setOnClickListener(new ButtonTakePhotoOnClickListener());
 
         bChooseAddressOnMap = (Button) findViewById(R.id.aAddPlace_bChooseAddressOnMap);
-        bChooseAddressOnMap.setEnabled(false);
         bChooseAddressOnMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(AddPlaceActivity.this, PlacesMapActivity.class);
-                intent.putExtra(Commons.MAP_OPEN_TYPE, Commons.OPEN_TYPE_CHOOSE_LOCATION);
-                startActivityForResult(intent, GET_COORDINATES_FROM_MAP_REQUEST);
+                if (cbUseCurrentCoordinates.isChecked()) {
+                    Toast.makeText(AddPlaceActivity.this, "Нельзя выбрать координаты на карте, так как" +
+                            " используются текущие координаты. Если вы хотите выбрать координаты на карте," +
+                            " снимите галочку \"Использовать текущие координаты\"", Toast.LENGTH_LONG).show();
+                } else {
+                    cbSaveAddressManual.setChecked(false);
+                    Intent intent = new Intent(AddPlaceActivity.this, PlacesMapActivity.class);
+                    intent.putExtra(Commons.MAP_OPEN_TYPE, Commons.OPEN_TYPE_CHOOSE_LOCATION);
+                    startActivityForResult(intent, GET_COORDINATES_FROM_MAP_REQUEST);
+                }
             }
         });
 
         getCategoriesAsync();
     }
+
 
     private void getAddressAsync() {
         new AsyncTask<Void, Void, Void>() {
@@ -155,13 +169,41 @@ public class AddPlaceActivity extends Activity {
                     if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
                         List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
                         Address addressRec = addresses.get(0);
-                        String address = addressRec.getAddressLine(0);
-                        String city = addressRec.getLocality();
-                        String state = addressRec.getAdminArea();
+                        StringBuilder stringBuilder = new StringBuilder();
                         String country = addressRec.getCountryName();
-                        String knownName = addressRec.getFeatureName();
-                        addressComplete = country + ", " + state + ", " + city
-                                + ", " + address + ", (" + knownName + ")";
+                        boolean first = true;
+                        if (StringUtils.isNotBlank(country)) {
+                            stringBuilder.append(country);
+                            first = false;
+                        }
+                        String state = addressRec.getAdminArea();
+                        if (StringUtils.isNotBlank(state)) {
+                            if (!first) {
+                                stringBuilder.append(", ");
+                            } else {
+                                first = false;
+                            }
+                            stringBuilder.append(state);
+                        }
+                        String city = addressRec.getLocality();
+                        if (StringUtils.isNotBlank(city) && !city.equals(state)) {
+                            if (!first) {
+                                stringBuilder.append(", ");
+                            } else {
+                                first = false;
+                            }
+                            stringBuilder.append(city);
+                        }
+                        String address = addressRec.getAddressLine(0);
+                        if (StringUtils.isNotBlank(address)) {
+                            if (!first) {
+                                stringBuilder.append(", ");
+                            } else {
+                                first = false;
+                            }
+                            stringBuilder.append(address);
+                        }
+                        addressComplete = stringBuilder.toString();
                     }
                 } catch (Exception ex) {
                     Log.e(APP_NAME, ex.toString(), ex);
@@ -338,6 +380,52 @@ public class AddPlaceActivity extends Activity {
         locationManager.removeUpdates(locationListener);
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (StringUtils.isNotBlank(selectedImageURI)) {
+            outState.putString(Commons.SELECTED_IMAGE_URI, selectedImageURI);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        String savedUri = savedInstanceState.getString(Commons.SELECTED_IMAGE_URI);
+        if (savedUri != null) {
+            selectedImageURI = savedUri;
+            ivImagePreview.setImageURI(Uri.parse(savedUri));
+        }
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        String description = etDescription.getText().toString();
+        String address = etAddress.getText().toString();
+        String latitude0 = tvLatitude.getText().toString();
+        if (DEFAULT_LATITUDE_TEXT.equals(latitude0)) {
+            latitude0 = "";
+        }
+        String longitude0 = tvLongitude.getText().toString();
+        if (DEFAULT_LONGITUDE_TEXT.equals(longitude0)) {
+            longitude0 = "";
+        }
+        if (!Commons.stringsAreBlank(description, address, latitude0, longitude0, selectedImageURI)) {
+            AlertDialog.Builder ad = new AlertDialog.Builder(this);
+            ad.setTitle("Подтверждение выхода");
+            ad.setMessage("Редактирование не завершено. Вы действительно хотите выйти?");
+            ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int arg1) {
+                    finish();
+                }
+            });
+            ad.setNegativeButton("Нет", null);
+            ad.show();
+        } else {
+            finish();
+        }
+    }
+
     private class ButtonTakePhotoOnClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
@@ -390,13 +478,11 @@ public class AddPlaceActivity extends Activity {
         @Override
         public void onClick(View v) {
             if (cbUseCurrentCoordinates.isChecked()) {
+                allowGetSelfCoordinatesFromGpsOrNetwork = true;
                 tvLongitude.setVisibility(View.VISIBLE);
-                tvLatitude.setVisibility(View.VISIBLE);
-                bChooseAddressOnMap.setEnabled(false);
             } else {
                 tvLongitude.setVisibility(View.INVISIBLE);
                 tvLatitude.setVisibility(View.INVISIBLE);
-                bChooseAddressOnMap.setEnabled(true);
             }
         }
     }

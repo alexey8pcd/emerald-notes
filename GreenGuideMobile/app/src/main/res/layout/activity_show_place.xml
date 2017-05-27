@@ -29,15 +29,15 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.1"
+            android:gravity="center_vertical"
             android:text="Просмотр места"
             android:textAlignment="center"
-            android:gravity="center_vertical"
-            android:textSize="24sp"/>
+            android:textSize="24sp" />
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.01" />
+            android:layout_weight="0.02" />
 
         <TextView
             android:id="@+id/aShowPlace_tvPlaceDescription"
@@ -45,13 +45,14 @@
             android:layout_height="0dp"
             android:layout_weight="0.1"
             android:text="Описание места"
+            android:gravity="center"
             android:textAlignment="center"
             android:textSize="20sp" />
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.01" />
+            android:layout_weight="0.02" />
 
         <TextView
             android:id="@+id/aShowPlace_tvAddress"
@@ -64,39 +65,40 @@
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.01" />
+            android:layout_weight="0.02" />
 
         <TextView
             android:id="@+id/aShowPlace_tvTitlePhotos"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.08"
-            android:textAlignment="center"
-            android:text="Фотографии места"
             android:gravity="center_vertical"
+            android:text="Фотографии места"
+            android:textAlignment="center"
             android:textSize="18sp" />
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.01" />
+            android:layout_weight="0.02" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/aShowPlace_rvImages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.48" />
+            android:layout_weight="0.40" />
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.01" />
+            android:layout_weight="0.02" />
 
         <Button
             android:id="@+id/aShowPlaces_bAddImage"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.1"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
             android:text="Добавить фотографию..." />
 
     </LinearLayout>

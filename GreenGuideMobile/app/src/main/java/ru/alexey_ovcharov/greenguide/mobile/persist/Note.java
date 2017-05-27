@@ -1,5 +1,7 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
+
 /**
  * Created by Алексей on 29.04.2017.
  */
@@ -16,10 +18,12 @@ public class Note {
             + " (" + ID_NOTE_COLUMN + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             NOTE_TEXT_COLUMN + "TEXT NOT NULL, " +
             ID_NOTE_TYPE_COLUMN + " INTEGER NOT NULL " +
-            "       REFERENCES note_types (id_note_type) ON DELETE RESTRICT ON UPDATE CASCADE);";
+            "       REFERENCES note_types (id_note_type) ON DELETE RESTRICT ON UPDATE CASCADE, "
+            + GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
     private int idNote;
     private String noteText;
     private int idNoteType;
+    private String guid;
 
     public int getIdNoteType() {
         return idNoteType;

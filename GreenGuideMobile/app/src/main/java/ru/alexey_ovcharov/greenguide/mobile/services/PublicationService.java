@@ -3,6 +3,7 @@ package ru.alexey_ovcharov.greenguide.mobile.services;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -146,12 +147,10 @@ public class PublicationService extends Service {
             imageIds.addAll(imagesIdsInt);
         }
         List<Image> allImages = dbHelper.getImageData(imageIds);
+        ContentResolver contentResolver = getContentResolver();
         for (Image image : allImages) {
-            String base64 = image.encodeDataAsBase64(getContentResolver());
-            JSONObject imageData = new JSONObject();
-            imageData.put(Image.ID_IMAGE_COLUMN, image.getIdImage());
-            imageData.put(Image.BINARY_DATA_COLUMN, base64);
-            jsonArray.put(imageData);
+            JSONObject imageObject = image.toJsonObject(contentResolver);
+            jsonArray.put(imageObject);
         }
         return jsonArray;
     }
