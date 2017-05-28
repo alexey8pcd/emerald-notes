@@ -402,15 +402,7 @@ public class AddPlaceActivity extends Activity {
     public void onBackPressed() {
         String description = etDescription.getText().toString();
         String address = etAddress.getText().toString();
-        String latitude0 = tvLatitude.getText().toString();
-        if (DEFAULT_LATITUDE_TEXT.equals(latitude0)) {
-            latitude0 = "";
-        }
-        String longitude0 = tvLongitude.getText().toString();
-        if (DEFAULT_LONGITUDE_TEXT.equals(longitude0)) {
-            longitude0 = "";
-        }
-        if (!Commons.stringsAreBlank(description, address, latitude0, longitude0, selectedImageURI)) {
+        if (!Commons.stringsAreBlank(description, address, selectedImageURI)) {
             AlertDialog.Builder ad = new AlertDialog.Builder(this);
             ad.setTitle("Подтверждение выхода");
             ad.setMessage("Редактирование не завершено. Вы действительно хотите выйти?");

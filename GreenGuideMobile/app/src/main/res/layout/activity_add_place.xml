@@ -140,7 +140,7 @@
             android:ems="10"
             android:hint="Адрес"
             android:inputType="textPersonName"
-            android:textSize="16sp" />
+            android:textSize="12sp" />
 
         <Space
             android:layout_width="match_parent"
@@ -193,7 +193,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.5"
+            android:layout_weight="0.28"
             android:orientation="horizontal"
             android:weightSum="1">
 
@@ -226,7 +226,7 @@
                     android:id="@+id/aAddPlace_bPhotoFromCamera"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="0.25"
+                    android:layout_weight="0.47"
                     android:background="@color/app_color"
                     android:text="Сделать снимок..."
                     android:textSize="14sp" />
@@ -234,13 +234,13 @@
                 <Space
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="0.02" />
+                    android:layout_weight="0.06" />
 
                 <Button
                     android:id="@+id/aAddPlace_bChoosePhoto"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="0.25"
+                    android:layout_weight="0.47"
                     android:background="@color/app_color"
                     android:text="Выбрать готовую фотографию..."
                     android:textSize="14sp" />
@@ -256,7 +256,9 @@
         <Button
             android:id="@+id/aAddPlace_bSave"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="0.12"
+            android:background="@color/app_color"
             android:text="Сохранить"/>
 
     </LinearLayout>
