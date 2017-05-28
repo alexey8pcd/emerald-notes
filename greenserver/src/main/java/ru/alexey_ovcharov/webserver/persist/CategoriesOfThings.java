@@ -2,6 +2,7 @@ package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -44,7 +45,20 @@ public class CategoriesOfThings implements Serializable {
     private String category;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "idCategory", fetch = FetchType.LAZY)
     private Collection<Things> thingsCollection;
+    
+    @Column(name = "guid")
+    @NotNull
+    private UUID guid;
 
+    public UUID getGuid() {
+        return guid;
+    }
+
+    public void setGuid(UUID guid) {
+        this.guid = guid;
+    }
+
+    
     public CategoriesOfThings() {
     }
 

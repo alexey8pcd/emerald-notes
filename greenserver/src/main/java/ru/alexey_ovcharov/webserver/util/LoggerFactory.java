@@ -1,6 +1,7 @@
 package ru.alexey_ovcharov.webserver.util;
 
 import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
@@ -16,6 +17,9 @@ public class LoggerFactory {
         appender.setName(name);
         appender.activateOptions();
         rootLogger.addAppender(appender);
-        return rootLogger;
+        Logger logger = Logger.getLogger(name);
+        logger.setLevel(Level.DEBUG);
+        logger.setAdditivity(true);
+        return logger;
     }
 }

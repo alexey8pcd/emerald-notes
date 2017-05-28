@@ -1,7 +1,14 @@
 package ru.alexey_ovcharov.webserver.persist;
 
+import java.awt.Image;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.UUID;
+import javax.faces.context.FacesContext;
+import javax.faces.event.PhaseId;
+import javax.imageio.ImageIO;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -18,10 +25,16 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.apache.commons.codec.binary.Base64;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.primefaces.model.ByteArrayContent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 /**
-@author Alexey
-*/
+ * @author Alexey
+ */
 @Entity
 @Table(name = "images")
 @XmlRootElement
@@ -46,30 +59,25 @@ public class Images implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "idImage", fetch = FetchType.LAZY)
     private Collection<ImagesForPlace> imagesForPlaceCollection;
 
-    @Column(name = "remote_database_id")
-    private String remoteDatabaseId; 
-    
-    @Column(name = "id_in_remote_database")
-    private Integer idInRemoteDatabase;
+    @Column(name = "guid")
+    @NotNull
+    private UUID guid;
 
-    public String getRemoteDatabaseId() {
-        return remoteDatabaseId;
+    public UUID getGuid() {
+        return guid;
     }
 
-    public void setRemoteDatabaseId(String remoteDatabaseId) {
-        this.remoteDatabaseId = remoteDatabaseId;
+    public void setGuid(UUID guid) {
+        this.guid = guid;
     }
 
-    public Integer getIdInRemoteDatabase() {
-        return idInRemoteDatabase;
+    public Images(JSONObject imageJSON) throws JSONException {
+        idImage = imageJSON.getInt("id_image");
+        guid = UUID.fromString(imageJSON.getString("guid"));
+        String decodedBytes = imageJSON.getString("binary_data");
+        imageData = Base64.decodeBase64(decodedBytes);
     }
 
-    public void setIdInRemoteDatabase(Integer idInRemoteDatabase) {
-        this.idInRemoteDatabase = idInRemoteDatabase;
-    }
-            
-    
-    
     public Images() {
     }
 
@@ -93,6 +101,14 @@ public class Images implements Serializable {
     public byte[] getImageData() {
         return imageData;
     }
+
+//    public StreamedContent getStreamedContent() {
+//        if (imageData != null) {
+//            return new ByteArrayContent(imageData, "image/png");
+//        } else {
+//            return new ByteArrayContent(new byte[0]);
+//        }
+//    }
 
     public void setImageData(byte[] imageData) {
         this.imageData = imageData;

@@ -5,16 +5,14 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Resource;
 import javax.ejb.EJBContext;
 import javax.ejb.Stateless;
@@ -37,7 +35,6 @@ import ru.alexey_ovcharov.webserver.util.LangUtil;
 import ru.alexey_ovcharov.webserver.util.LoggerFactory;
 import ru.alexey_ovcharov.webserver.util.NotNull;
 import ru.alexey_ovcharov.webserver.util.Nullable;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * @author Alexey
@@ -59,20 +56,19 @@ public class ClientReferencesHandler {
     public ClientReferencesHandler() {
     }
 
-    public void handle(JSONObject requestAsJSON) throws Exception {
+    public void handleReceivePlaces(JSONObject requestAsJSON) throws Exception {
         logger.debug("Обрабатываю запрос слияния справочников с удаленного устройства");
         UserTransaction transaction = context.getUserTransaction();
         try {
             transaction.begin();
             Map<Integer, PlaceTypes> linkedPlaceTypes = getPlacesTypesBinding(requestAsJSON);
             JSONArray jsonArrayImages = requestAsJSON.getJSONArray("images");
-            Map<Integer, byte[]> images = getImages(jsonArrayImages);
-            String remoteDatabaseId = requestAsJSON.optString("database_id");
+            Map<Integer, Images> allRemoteImages = getImages(jsonArrayImages);
 
             JSONArray placesJSONArray = requestAsJSON.getJSONArray("places");
             for (int i = 0; i < placesJSONArray.length(); ++i) {
                 JSONObject placeInfoJSON = placesJSONArray.getJSONObject(i);
-                parsePlaceInfo(placeInfoJSON, linkedPlaceTypes, images, remoteDatabaseId);
+                parsePlaceInfo(placeInfoJSON, linkedPlaceTypes, allRemoteImages);
             }
             transaction.commit();
         } catch (Exception ex) {
@@ -94,7 +90,8 @@ public class ClientReferencesHandler {
             JSONObject placeTypeJSON = placeTypesJSON.getJSONObject(i);
             String placeType = placeTypeJSON.getString("type");
             int idPlaceTypeRemote = placeTypeJSON.getInt("id_place_type");
-            PlaceTypes placeTypesLocal = findOrCreatePlaceTypeByName(placeType);
+            String guid = placeTypeJSON.getString("guid");
+            PlaceTypes placeTypesLocal = findOrCreatePlaceTypeByName(placeType, guid);
             linkedPlaceTypes.put(idPlaceTypeRemote, placeTypesLocal);
         }
         entityManager.flush();
@@ -103,7 +100,8 @@ public class ClientReferencesHandler {
     }
 
     @NotNull
-    private PlaceTypes findOrCreatePlaceTypeByName(@NotNull String placeType) {
+    private PlaceTypes findOrCreatePlaceTypeByName(@NotNull String placeType,
+            @NotNull String guid) {
         TypedQuery<PlaceTypes> typedQuery = entityManager.createQuery("SELECT p "
                 + "FROM PlaceTypes p WHERE p.type= :placeType", PlaceTypes.class);
         typedQuery.setParameter("placeType", placeType);
@@ -113,19 +111,18 @@ public class ClientReferencesHandler {
         } else {
             PlaceTypes placeTypes = new PlaceTypes();
             placeTypes.setType(placeType);
+            placeTypes.setGuid(UUID.fromString(guid));
             entityManager.persist(placeTypes);
             return placeTypes;
         }
     }
 
     @Nullable
-    private Places findPlace(String description,
-            Date dateCreate) throws ParseException, JSONException {
-        logger.debug("Выполняю поиск места по дате и описанию");
-        TypedQuery<Places> query = entityManager.createQuery("SELECT p FROM Places p WHERE "
-                + "p.description= :description AND p.dateCreate= :dateCreate", Places.class);
-        query.setParameter("description", description);
-        query.setParameter("dateCreate", dateCreate);
+    private Places findPlace(String guid) throws ParseException, JSONException {
+        logger.debug("Выполняю поиск места guid: " + guid);
+        TypedQuery<Places> query = entityManager.createQuery("SELECT p FROM "
+                + "Places p WHERE p.guid= :guid", Places.class);
+        query.setParameter("guid", UUID.fromString(guid));
         List<Places> foundPlaces = query.getResultList();
         Places place = null;
         if (!foundPlaces.isEmpty()) {
@@ -138,9 +135,13 @@ public class ClientReferencesHandler {
     }
 
     @NotNull
-    private Places createPlace(String description, Date dateCreate,
-            JSONObject placeInfoJSON, PlaceTypes placeTypesLocal) throws JSONException {
+    private Places createPlace(JSONObject placeInfoJSON, PlaceTypes placeTypesLocal) throws JSONException, ParseException {
         Places place = new Places();
+        String guid = placeInfoJSON.getString("guid");
+        String description = placeInfoJSON.getString("description");
+        Date dateCreate = new SimpleDateFormat(DATE_FORMAT_YYYY_MM_DD).parse(
+                placeInfoJSON.optString("date_create"));
+
         place.setDescription(description);
         place.setDateCreate(dateCreate);
         place.setIdPlaceType(placeTypesLocal);
@@ -161,6 +162,7 @@ public class ClientReferencesHandler {
         @Nullable
         Countries country = findCountryByName(placeInfoJSON.optString("country"));
         place.setIdCountry(country);
+        place.setGuid(UUID.fromString(guid));
         return place;
 
     }
@@ -184,20 +186,13 @@ public class ClientReferencesHandler {
 
     @NotNull
     private List<ImagesForPlace> createNewImagesForPlace(Places place,
-            String remoteDatabaseId, Set<Integer> remoteImageIds,
-            Map<Integer, byte[]> remoteImagesData) {
+            Collection<Images> remoteImagesForPlace) {
 
-        List<ImagesForPlace> imagesForPlaces = new ArrayList<>(remoteImageIds.size());
-        for (Integer remoteImageIdForThisPlace : remoteImageIds) {
-            Images image = new Images();
-            image.setImageData(remoteImagesData.get(remoteImageIdForThisPlace));
-            image.setIdInRemoteDatabase(remoteImageIdForThisPlace);
-            image.setRemoteDatabaseId(remoteDatabaseId);
-
+        List<ImagesForPlace> imagesForPlaces = new ArrayList<>(remoteImagesForPlace.size());
+        for (Images remoteImageForThisPlace : remoteImagesForPlace) {
             ImagesForPlace imagesForPlace = new ImagesForPlace();
             imagesForPlace.setIdPlace(place);
-            imagesForPlace.setIdImage(image);
-
+            imagesForPlace.setIdImage(remoteImageForThisPlace);
             imagesForPlaces.add(imagesForPlace);
         }
         return imagesForPlaces;
@@ -205,7 +200,7 @@ public class ClientReferencesHandler {
 
     private void parsePlaceInfo(JSONObject placeInfoJSON,
             Map<Integer, PlaceTypes> linkedPlaceTypes,
-            Map<Integer, byte[]> remoteImagesData, String remoteDatabaseId) throws Exception {
+            Map<Integer, Images> allRemoteImages) throws Exception {
 
         int idPlaceTypeRemote = placeInfoJSON.getInt("id_place_type");
         PlaceTypes placeTypesLocal = linkedPlaceTypes.get(idPlaceTypeRemote);
@@ -213,38 +208,40 @@ public class ClientReferencesHandler {
             throw new RuntimeException("Не найден тип места с идентификатором "
                     + idPlaceTypeRemote + " в справочнике типов, полученном удаленно");
         }
-
-        String description = placeInfoJSON.getString("description");
-        Date dateCreate = new SimpleDateFormat(DATE_FORMAT_YYYY_MM_DD).parse(
-                placeInfoJSON.optString("date_create"));
-
-        Places place = findPlace(description, dateCreate);
+        String guid = placeInfoJSON.getString("guid");
+        Places place = findPlace(guid);
         boolean placeExists;
         if (place == null) {
             placeExists = false;
-            place = createPlace(description, dateCreate, placeInfoJSON, placeTypesLocal);
+            place = createPlace(placeInfoJSON, placeTypesLocal);
             //еще не сохранено в базе
         } else {
             placeExists = true;
         }
 
-        JSONArray imagesJSONArray = placeInfoJSON.getJSONArray("images");
-        if (imagesJSONArray.length() > 0) {
-            Set<Integer> remoteImageIds = getRemoteImageIds(imagesJSONArray);
+        JSONArray imagesJSONArrayForPlace = placeInfoJSON.getJSONArray("images");
+        if (imagesJSONArrayForPlace.length() > 0) {
+            Set<Integer> remoteImagesIdsForPlace = getRemoteImagesIdsForPlace(imagesJSONArrayForPlace);
+
+            Map<Integer, Images> remoteImagesForPlace
+                    = getImagesByIds(allRemoteImages, remoteImagesIdsForPlace);
 
             Collection<ImagesForPlace> imagesForPlace = place.getImagesForPlaceCollection();
             if (imagesForPlace == null || imagesForPlace.isEmpty()) {
+
                 List<ImagesForPlace> newImagesForPlace
-                        = createNewImagesForPlace(place, remoteDatabaseId,
-                                remoteImageIds, remoteImagesData);
+                        = createNewImagesForPlace(place, remoteImagesForPlace.values());
                 place.setImagesForPlaceCollection(newImagesForPlace);
             } else {
-                Set<Integer> newRemoteImagesIds
-                        = getOnlyNewImageIds(remoteDatabaseId, imagesForPlace, remoteImageIds);
-                List<ImagesForPlace> newImageForPlaces
-                        = createNewImagesForPlace(place, remoteDatabaseId,
-                                newRemoteImagesIds, remoteImagesData);
-                imagesForPlace.addAll(newImageForPlaces);
+
+                Set<Images> newRemoteImagesIds
+                        = getOnlyNewImages(imagesForPlace, remoteImagesForPlace);
+                if (!newRemoteImagesIds.isEmpty()) {
+                    List<ImagesForPlace> newImageForPlaces
+                            = createNewImagesForPlace(place, newRemoteImagesIds);
+                    imagesForPlace.addAll(newImageForPlaces);
+                }
+
             }
         }
         if (placeExists) {
@@ -254,7 +251,8 @@ public class ClientReferencesHandler {
         }
     }
 
-    private Set<Integer> getRemoteImageIds(JSONArray imagesJSONArray) throws JSONException {
+    @NotNull
+    private Set<Integer> getRemoteImagesIdsForPlace(JSONArray imagesJSONArray) throws JSONException {
         Set<Integer> imagesIds = new HashSet<>(imagesJSONArray.length());
         for (int j = 0; j < imagesJSONArray.length(); ++j) {
             int imageId = imagesJSONArray.getInt(j);
@@ -264,41 +262,57 @@ public class ClientReferencesHandler {
     }
 
     @NotNull
-    private Map<Integer, byte[]> getImages(JSONArray jsonArray)
+    private Map<Integer, Images> getImages(JSONArray jsonArray)
             throws JSONException, UnsupportedEncodingException {
-
-        Map<Integer, byte[]> result = new HashMap<>(jsonArray.length());
-
+        Map<Integer, Images> result = new HashMap<>(jsonArray.length());
         for (int i = 0; i < jsonArray.length(); ++i) {
             JSONObject imageJSON = jsonArray.getJSONObject(i);
-            int idImage = imageJSON.getInt("id_image");
-            String decodedBytes = imageJSON.getString("binary_data");
-            byte[] imageBytes = Base64.decodeBase64(decodedBytes);
-            result.put(idImage, imageBytes);
+            Images image = new Images(imageJSON);
+            result.put(image.getIdImage(), image);
         }
         return result;
     }
 
     @NotNull
-    private Set<Integer> getOnlyNewImageIds(String remoteDatabaseId,
-            Collection<ImagesForPlace> imagesForPlace, Set<Integer> remoteImageIds) {
-        Set<Integer> result = new HashSet<>();
-        Map<Integer, Images> existImages = new HashMap<>();
-        for (ImagesForPlace ifp : imagesForPlace) {
-            existImages.put(ifp.getIdImage().getIdInRemoteDatabase(), ifp.getIdImage());
+    private Set<Images> getOnlyNewImages(
+            Collection<ImagesForPlace> imagesForPlaceExists, Map<Integer, Images> imagesForPlaceFromRequest) {
+        Set<Images> result = new HashSet<>();
+        Map<String, Images> existImages = new HashMap<>();
+        for (ImagesForPlace ifp : imagesForPlaceExists) {
+            existImages.put(ifp.getIdImage().getGuid().toString(), ifp.getIdImage());
         }
 
-        for (Integer remoteImageId : remoteImageIds) {
-            Images imageWithSameRemoteId = existImages.get(remoteImageId);
-            if (imageWithSameRemoteId != null) {
-                if (Objects.equals(imageWithSameRemoteId.getIdInRemoteDatabase(), remoteDatabaseId)) {
-                    //такое изображение уже есть в базе
-                    continue;
-                }
+        for (Images image : imagesForPlaceFromRequest.values()) {
+            Images imageWithSameRemoteId = existImages.get(image.getGuid().toString());
+            if (imageWithSameRemoteId == null) {
+                result.add(image);
+            } else {
+                //такое изображение уже есть в базе
             }
-            result.add(remoteImageId);
         }
         return result;
+    }
+
+    @NotNull
+    private Map<Integer, Images> getImagesByIds(Map<Integer, Images> allRemoteImages,
+            Set<Integer> remoteImagesIdsForPlace) {
+        Map<Integer, Images> result = new HashMap<>();
+        for (Integer idRemoteImage : remoteImagesIdsForPlace) {
+            result.put(idRemoteImage, allRemoteImages.get(idRemoteImage));
+        }
+        return result;
+    }
+
+    public void handleReceiveThings(JSONObject jSONObject) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public String handleGetPlaces() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public String handleGetThings() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

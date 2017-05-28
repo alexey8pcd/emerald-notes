@@ -2,6 +2,7 @@ package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -45,6 +46,18 @@ public class PlaceTypes implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "idPlaceType", fetch = FetchType.LAZY)
     private Collection<Places> placesCollection;
 
+    @Column(name = "guid")
+    @NotNull
+    private UUID guid;
+
+    public UUID getGuid() {
+        return guid;
+    }
+
+    public void setGuid(UUID guid) {
+        this.guid = guid;
+    }
+    
     public PlaceTypes() {
     }
 

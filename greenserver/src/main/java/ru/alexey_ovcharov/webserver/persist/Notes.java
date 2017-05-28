@@ -1,6 +1,7 @@
 package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,6 +45,18 @@ public class Notes implements Serializable {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private NoteTypes idNoteType;
 
+    @Column(name = "guid")
+    @NotNull
+    private UUID guid;
+
+    public UUID getGuid() {
+        return guid;
+    }
+
+    public void setGuid(UUID guid) {
+        this.guid = guid;
+    }
+    
     public Notes() {
     }
 

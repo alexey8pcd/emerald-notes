@@ -20,7 +20,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ClientReferencesReceiver</servlet-name>
-        <url-pattern>/sendref</url-pattern>
+        <url-pattern>/references/*</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

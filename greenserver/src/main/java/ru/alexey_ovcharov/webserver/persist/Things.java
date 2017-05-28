@@ -2,6 +2,7 @@ package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -67,6 +68,18 @@ public class Things implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     private Countries idCountry;
 
+    @Column(name = "guid")
+    @NotNull
+    private UUID guid;
+
+    public UUID getGuid() {
+        return guid;
+    }
+
+    public void setGuid(UUID guid) {
+        this.guid = guid;
+    }
+    
     public Things() {
     }
 
