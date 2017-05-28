@@ -39,8 +39,10 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 public class PublicationService extends Service {
 
     private static final int NOTIFY_ID = 101;
+    public static final String SEND_COMMAND = "/send";
+    public static final String PLACES_DATA = "/places_data";
     private DbHelper dbHelper;
-    private static final String URL_PUBLIC_REFERENCES = "/greenserver/sendref";
+    private static final String URL_PUBLIC_REFERENCES = "/greenserver/references";
 
     public PublicationService() {
     }
@@ -195,7 +197,7 @@ public class PublicationService extends Service {
     private NetworkStatus sendData(String data) {
         try {
             String serviceUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
-            URL url = new URL(serviceUrl + URL_PUBLIC_REFERENCES);
+            URL url = new URL(serviceUrl + URL_PUBLIC_REFERENCES + SEND_COMMAND + PLACES_DATA);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(250000);
             conn.setConnectTimeout(25000);
