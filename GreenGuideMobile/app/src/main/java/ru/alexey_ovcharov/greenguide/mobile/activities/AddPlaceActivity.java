@@ -20,7 +20,6 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewPropertyAnimator;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -31,8 +30,6 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -294,7 +291,7 @@ public class AddPlaceActivity extends Activity {
                         protected Void doInBackground(Void... params) {
                             try {
                                 long idImage = dbHelper.addImage(selectedImageURI);
-                                if (idImage != DbHelper.ROW_NOT_INSERTED) {
+                                if (idImage != DbHelper.ROW_NOT_EXIST) {
                                     place.addImageId((int) idImage);
                                     dbHelper.addPlace(place);
                                 }

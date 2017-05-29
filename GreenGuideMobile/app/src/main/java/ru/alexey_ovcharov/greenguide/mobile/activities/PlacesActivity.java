@@ -20,6 +20,7 @@ import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.services.PublicationService;
+import ru.alexey_ovcharov.greenguide.mobile.services.UpdateService;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.SERVER_URL;
@@ -69,6 +70,14 @@ public class PlacesActivity extends Activity {
             }
         });
 
+        Button bUpdateAll = (Button) findViewById(R.id.aPlaces_bUpdateAll);
+        bUpdateAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateAll();
+            }
+        });
+
         Button bPlacesOnMap = (Button) findViewById(R.id.aPlaces_bAsMap);
         bPlacesOnMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,6 +87,26 @@ public class PlacesActivity extends Activity {
         });
         tvPlacesInfo = (TextView) findViewById(R.id.aPlaces_tvPlacesInfo);
         showPlacesCountFromDbAsync();
+    }
+
+    private void updateAll() {
+        AlertDialog.Builder ad = new AlertDialog.Builder(PlacesActivity.this);
+        ad.setTitle("Разрешение на обновление");
+        ad.setMessage("Обновление информации о местах может потребовать получения " +
+                "большого объема данных с сервера, продолжить?");
+        ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Toast.makeText(PlacesActivity.this, "Процесс обновления запущен",
+                        Toast.LENGTH_LONG).show();
+                startUpdateService();
+            }
+        });
+        ad.setNegativeButton("Нет", null);
+        ad.show();
+    }
+
+    private void startUpdateService() {
+        startService(new Intent(this, UpdateService.class));
     }
 
     private void addPlace() {
@@ -133,11 +162,7 @@ public class PlacesActivity extends Activity {
                 startPublicationService();
             }
         });
-        ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int arg1) {
-                //ничего не делаем
-            }
-        });
+        ad.setNegativeButton("Нет", null);
         ad.show();
     }
 

@@ -6,7 +6,7 @@ import java.lang.annotation.Documented;
  * Created by Алексей on 26.04.2017.
  */
 @Documented
-@interface Entity {
+public @interface Entity {
 
     public static final String GUID_COLUMN_NAME = "guid";
 }

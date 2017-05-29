@@ -75,7 +75,12 @@
         <activity
             android:name=".activities.PlacesMapActivity"
             android:label="@string/title_activity_places_map" />
-        <activity android:name=".activities.ReferencesActivity"></activity>
+        <activity android:name=".activities.ReferencesActivity" />
+
+        <service
+            android:name=".services.UpdateService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

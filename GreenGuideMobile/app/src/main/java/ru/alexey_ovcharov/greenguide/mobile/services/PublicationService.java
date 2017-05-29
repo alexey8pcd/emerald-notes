@@ -1,12 +1,8 @@
 package ru.alexey_ovcharov.greenguide.mobile.services;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,11 +34,8 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
 public class PublicationService extends Service {
 
-    private static final int NOTIFY_ID = 101;
     public static final String SEND_COMMAND = "/send";
-    public static final String PLACES_DATA = "/places_data";
     private DbHelper dbHelper;
-    private static final String URL_PUBLIC_REFERENCES = "/greenserver/references";
 
     public PublicationService() {
     }
@@ -60,22 +53,22 @@ public class PublicationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startAsync();
+        publicDataAsync();
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void startAsync() {
+    private void publicDataAsync() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     Log.d(APP_NAME, "Начинаю отправку данных на сервер");
                     String data = prepareTextRequest();
-                    NetworkStatus networkStatus = NetworkStatus.CLIENT_ERROR;
+                    InteractStatus networkStatus = InteractStatus.CLIENT_ERROR;
                     if (data != null) {
                         networkStatus = sendData(data);
                     }
-                    sendNotify(networkStatus);
+                    NotificationsHelper.sendPublicNotify(networkStatus, getApplicationContext(), "Результат публикации справочников");
                 } catch (Exception ex) {
                     Log.e(APP_NAME, ex.toString(), ex);
                 } finally {
@@ -86,39 +79,7 @@ public class PublicationService extends Service {
         }).start();
     }
 
-    private void sendNotify(NetworkStatus networkStatus) {
-        Log.d(APP_NAME, "Создаю уведомление об отправке");
-        Context context = getApplicationContext();
-        Resources res = context.getResources();
-        Notification.Builder builder = new Notification.Builder(context);
 
-        String textRes = "?";
-        int icon = android.R.drawable.ic_dialog_alert;
-        switch (networkStatus) {
-            case SUCCESS:
-                textRes = "Успешная отправка";
-                icon = android.R.drawable.ic_dialog_info;
-                break;
-            case CLIENT_ERROR:
-                textRes = "Ошибка: неверный запрос";
-                break;
-            case SERVER_ERROR:
-                textRes = "Ошибка сервера";
-                break;
-            case UNKNOWN:
-                textRes = "Ошибка сети";
-                break;
-        }
-        builder.setSmallIcon(icon)
-                .setContentTitle("Результат публикации справочников")
-                .setContentText(textRes);
-        Notification notification = builder.build();
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFY_ID, notification);
-
-    }
 
     @Nullable
     private String prepareTextRequest() {
@@ -194,15 +155,15 @@ public class PublicationService extends Service {
         return jsonArray;
     }
 
-    private NetworkStatus sendData(String data) {
+    private InteractStatus sendData(String data) {
         try {
             String serviceUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
-            URL url = new URL(serviceUrl + URL_PUBLIC_REFERENCES + SEND_COMMAND + PLACES_DATA);
+            URL url = new URL(serviceUrl + Commons.URL_REFERENCES + SEND_COMMAND + Commons.PLACES_DATA_URL_PART);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(250000);
             conn.setConnectTimeout(25000);
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("User-Agent", "Android");
+            conn.setRequestProperty("User-Agent", "Android(" + APP_NAME + ")");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("charset", "utf-8");
             conn.setDoOutput(true);
@@ -213,16 +174,15 @@ public class PublicationService extends Service {
             int responseCode = conn.getResponseCode();
             Log.d(APP_NAME, "Http код ответа: " + responseCode);
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                return NetworkStatus.SUCCESS;
+                return InteractStatus.SUCCESS;
             } else if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                return NetworkStatus.CLIENT_ERROR;
+                return InteractStatus.CLIENT_ERROR;
             } else {
-                return NetworkStatus.SERVER_ERROR;
+                return InteractStatus.SERVER_ERROR;
             }
         } catch (Exception e) {
             Log.e(APP_NAME, e.toString(), e);
-            return NetworkStatus.UNKNOWN;
+            return InteractStatus.UNKNOWN;
         }
-
     }
 }

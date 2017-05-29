@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -80,8 +82,23 @@ public class Place {
     private int idPlaceType;
     private Integer idCountry;
     private List<Integer> imagesInfo = new ArrayList<>(1);
-    private LatLng location;
     private String guid;
+
+    public Place(JSONObject placeJson) throws JSONException, ParseException {
+        description = placeJson.getString(Place.DESCRIPTION_COLUMN);
+        guid = placeJson.getString(Entity.GUID_COLUMN_NAME);
+        address = placeJson.optString(Place.ADDRESS_COLUMN);
+        if (StringUtils.isBlank(address)) {
+            address = null;
+        }
+        dateCreate = placeJson.getString(Place.DATE_CREATE_COLUMN);
+        if (placeJson.has(Place.LATITUDE_COLUMN)) {
+            latitude = new BigDecimal(placeJson.getDouble(Place.LATITUDE_COLUMN));
+        }
+        if (placeJson.has(Place.LONGITUDE_COLUMN)) {
+            longitude = new BigDecimal(placeJson.getDouble(Place.LONGITUDE_COLUMN));
+        }
+    }
 
     public List<Integer> getImagesIds() {
         return imagesInfo;
@@ -126,6 +143,10 @@ public class Place {
         guid = cursor.getString(cursor.getColumnIndex(Entity.GUID_COLUMN_NAME));
     }
 
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
+
     public BigDecimal getLatitude() {
         return latitude;
     }
@@ -158,7 +179,6 @@ public class Place {
                 ", idPlaceType=" + idPlaceType +
                 ", idCountry=" + idCountry +
                 ", imagesInfo=" + imagesInfo +
-                ", location=" + location +
                 ", guid='" + guid + '\'' +
                 '}';
     }
@@ -259,8 +279,14 @@ public class Place {
         return Collections.EMPTY_LIST;
     }
 
-    public void addImageIds(List<Integer> imagesId) {
+    public void addImageIds(Collection<Integer> imagesId) {
         imagesInfo.addAll(imagesId);
+    }
+
+    public void addImages(Collection<Image> images) {
+        for (Image image : images) {
+            imagesInfo.add(image.getIdImage());
+        }
     }
 
     @Nullable
@@ -270,5 +296,9 @@ public class Place {
         } else {
             return null;
         }
+    }
+
+    public String getGuid() {
+        return guid;
     }
 }

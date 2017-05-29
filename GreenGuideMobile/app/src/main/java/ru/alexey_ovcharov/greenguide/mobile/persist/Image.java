@@ -41,6 +41,12 @@ public class Image {
         guid = cursor.getString(cursor.getColumnIndex(Entity.GUID_COLUMN_NAME));
     }
 
+    public Image(int idImage, String guid, String url) {
+        this.idImage = idImage;
+        this.guid = guid;
+        this.url = url;
+    }
+
     public String getGuid() {
         return guid;
     }
