@@ -2,6 +2,8 @@ package ru.alexey_ovcharov.webserver.persist;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
@@ -25,10 +27,16 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import ru.alexey_ovcharov.webserver.common.util.Constants;
+import ru.alexey_ovcharov.webserver.common.util.LangUtil;
+import ru.alexey_ovcharov.webserver.common.util.Nullable;
 
 /**
-@author Alexey
-*/
+ * @author Alexey
+ */
 @Entity
 @Table(name = "places")
 @XmlRootElement
@@ -75,6 +83,47 @@ public class Places implements Serializable {
     @NotNull
     private UUID guid;
 
+    public Places(JSONObject placeInfoJSON) throws JSONException, ParseException {
+        guid = UUID.fromString(placeInfoJSON.getString("guid"));
+        description = placeInfoJSON.getString("description");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD);
+        simpleDateFormat.setLenient(false);
+        dateCreate = simpleDateFormat.parse(placeInfoJSON.getString("date_create"));
+        if (placeInfoJSON.has("address")) {
+            address = placeInfoJSON.getString("address");
+        }
+        latitude = LangUtil.toDecimalOrNullIfEmpty(placeInfoJSON.optString("latitude"));
+        longitude = LangUtil.toDecimalOrNullIfEmpty(placeInfoJSON.optString("longitude"));
+    }
+
+    @NotNull
+    public JSONObject toJSON() throws JSONException {
+        JSONObject result = new JSONObject();
+        result.put("description", description);
+        result.put("guid", guid.toString());
+        if (address != null) {
+            result.put("address", address);
+        }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.DATE_FORMAT_YYYY_MM_DD);
+        result.put("date_create", simpleDateFormat.format(dateCreate));
+        if (latitude != null) {
+            result.put("latitude", latitude.doubleValue());
+        }
+        if (longitude != null) {
+            result.put("longitude", longitude.doubleValue());
+        }
+        result.put("type", idPlaceType.getType());
+        JSONArray imagesIdsArray = new JSONArray();
+        for (ImagesForPlace imagesForPlace : imagesForPlaceCollection) {
+            imagesIdsArray.put(imagesForPlace.getIdImage().getGuid().toString());
+        }
+        result.put("images", imagesIdsArray);
+        if (idCountry != null) {
+            result.put("country", idCountry.getCountry());
+        }
+        return result;
+    }
+
     public UUID getGuid() {
         return guid;
     }
@@ -82,7 +131,7 @@ public class Places implements Serializable {
     public void setGuid(UUID guid) {
         this.guid = guid;
     }
-    
+
     public Places() {
     }
 

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.Map;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,62 +12,79 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 import ru.alexey_ovcharov.webserver.logic.ClientReferencesHandler;
-import ru.alexey_ovcharov.webserver.util.LoggerFactory;
+import ru.alexey_ovcharov.webserver.common.util.LoggerFactory;
 
 /**
  *
  * @author Алексей
  */
 public class ClientReferencesReceiver extends HttpServlet {
-
+    
     private static final long MAX_REQUEST_LENGTH = 4_000_000_000L;//~500мб
     private static final String GET_TYPE = "/get";
     private static final String THINGS_DATA = "/things_data";
     private static final String PLACES_DATA = "/places_data";
+    private static final String IMAGES_DATA = "/images_data";
     private static final String SEND_TYPE = "/send";
+    private static final String GUID_PARAM = "guid";
     @EJB
     private ClientReferencesHandler handler;
-
+    
     private final Logger logger = LoggerFactory.createConsoleLogger(
             ClientReferencesReceiver.class.getSimpleName());
-
+    
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
             throws ServletException, IOException {
-        System.err.println("Принял GET запрос от " + request.getRemoteHost());
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ClientReferencesReceiver</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ClientReferencesReceiver at " + request.getContextPath() + ", please use POST public client data </h1>");
-            out.println("</body>");
-            out.println("</html>");
+        String requestURI = httpServletRequest.getRequestURI();
+        logger.info("Принял GET запрос от " + httpServletRequest.getRemoteHost()
+                + ", URL: " + requestURI);
+        Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+        logger.info("Параметры: " + ServletUtils.paramsToString(parametersMap));
+        if (requestURI.contains(GET_TYPE)) {
+            try {
+                returnData(requestURI, parametersMap, httpServletResponse);
+            } catch (Exception e) {
+                logger.error(e, e);
+                httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        } else {
+            try (PrintWriter out = httpServletResponse.getWriter()) {
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("<head>");
+                out.println("<title>Servlet ClientReferencesReceiver</title>");
+                out.println("</head>");
+                out.println("<body>");
+                out.println("<h1>Servlet ClientReferencesReceiver at "
+                        + httpServletRequest.getContextPath()
+                        + ", please use POST for public client data </h1>");
+                out.println("</body>");
+                out.println("</html>");
+            }
+            httpServletResponse.setContentType("text/html;charset=UTF-8");
         }
     }
-
+    
     @Override
-    protected void doPost(HttpServletRequest httpServletRequest, 
+    protected void doPost(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse)
             throws ServletException, IOException {
         long contentLength = httpServletRequest.getContentLengthLong();
         logger.info("Принял POST запрос от " + httpServletRequest.getRemoteHost()
                 + ", длина содержимого: " + contentLength);
         logger.info("Заголовки: " + ServletUtils.headersToString(httpServletRequest));
+        Map<String, String[]> parametersMap = httpServletRequest.getParameterMap();
+        logger.info("Параметры: " + ServletUtils.paramsToString(parametersMap));
         if (contentLength <= MAX_REQUEST_LENGTH) {
             try {
-
                 String requestURI = httpServletRequest.getRequestURI();
                 if (requestURI.contains(SEND_TYPE)) {
                     saveData(httpServletRequest, httpServletResponse);
                 } else if (requestURI.contains(GET_TYPE)) {
-                    returnData(requestURI, httpServletResponse);
+                    returnData(requestURI, parametersMap, httpServletResponse);
                 }
             } catch (Exception e) {
                 logger.error(e, e);
@@ -76,27 +94,33 @@ public class ClientReferencesReceiver extends HttpServlet {
             httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Превышено ограничение на длину запроса");
         }
-
+        
     }
-
-    private void returnData(String requestURI, HttpServletResponse httpServletResponse) throws IOException {
-        int indexOf = requestURI.indexOf(SEND_TYPE);
-        String command = requestURI.substring(indexOf + SEND_TYPE.length());
+    
+    private void returnData(String requestURI, Map<String, String[]> parametersMap,
+            HttpServletResponse httpServletResponse) throws Exception {
+        int indexOf = requestURI.lastIndexOf("/");
+        String command = requestURI.substring(indexOf);
         String response;
         switch (command) {
             case PLACES_DATA:
-                response = handler.handleGetPlaces();
+                response = handler.getPlacesJSON();
                 break;
             case THINGS_DATA:
-                response = handler.handleGetThings();
+                response = handler.getThingsJSON();
+                break;
+            case IMAGES_DATA:
+                response = handler.getImagesJSON(parametersMap.get(GUID_PARAM));
                 break;
             default:
                 httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
         }
+        httpServletResponse.setContentType("application/json;charset=UTF-8");
         httpServletResponse.getWriter().write(response);
     }
-
+    
+    
     private void saveData(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws Exception {
         String characterEncoding = StringUtils.defaultString(httpServletRequest.getHeader("charset"), "UTF-8");
@@ -120,7 +144,7 @@ public class ClientReferencesReceiver extends HttpServlet {
         }
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
-
+    
     private String getResponseBody(HttpServletRequest httpServletRequest, String characterEncoding) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(
@@ -133,10 +157,10 @@ public class ClientReferencesReceiver extends HttpServlet {
         String request = sb.toString();
         return request;
     }
-
+    
     @Override
     public String getServletInfo() {
         return "ClientReferencesReceiver for public client data";
     }
-
+    
 }

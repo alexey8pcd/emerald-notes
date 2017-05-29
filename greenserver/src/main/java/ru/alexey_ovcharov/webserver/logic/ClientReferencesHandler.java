@@ -1,12 +1,9 @@
 package ru.alexey_ovcharov.webserver.logic;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,10 +28,9 @@ import ru.alexey_ovcharov.webserver.persist.Images;
 import ru.alexey_ovcharov.webserver.persist.ImagesForPlace;
 import ru.alexey_ovcharov.webserver.persist.PlaceTypes;
 import ru.alexey_ovcharov.webserver.persist.Places;
-import ru.alexey_ovcharov.webserver.util.LangUtil;
-import ru.alexey_ovcharov.webserver.util.LoggerFactory;
-import ru.alexey_ovcharov.webserver.util.NotNull;
-import ru.alexey_ovcharov.webserver.util.Nullable;
+import ru.alexey_ovcharov.webserver.common.util.LoggerFactory;
+import ru.alexey_ovcharov.webserver.common.util.NotNull;
+import ru.alexey_ovcharov.webserver.common.util.Nullable;
 
 /**
  * @author Alexey
@@ -42,8 +38,6 @@ import ru.alexey_ovcharov.webserver.util.Nullable;
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
 public class ClientReferencesHandler {
-
-    private static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
 
     private final Logger logger = LoggerFactory.createConsoleLogger("referenceHandler");
 
@@ -134,51 +128,14 @@ public class ClientReferencesHandler {
         return place;
     }
 
-    @NotNull
-    private Places createPlace(JSONObject placeInfoJSON, PlaceTypes placeTypesLocal) throws JSONException, ParseException {
-        Places place = new Places();
-        String guid = placeInfoJSON.getString("guid");
-        String description = placeInfoJSON.getString("description");
-        Date dateCreate = new SimpleDateFormat(DATE_FORMAT_YYYY_MM_DD).parse(
-                placeInfoJSON.optString("date_create"));
-
-        place.setDescription(description);
-        place.setDateCreate(dateCreate);
-        place.setIdPlaceType(placeTypesLocal);
-
-        if (placeInfoJSON.has("address")) {
-            String address = placeInfoJSON.getString("address");
-            place.setAddress(address);
-        }
-
-        @Nullable
-        BigDecimal latitude = LangUtil.toDecimalOrNullIfEmpty(placeInfoJSON.optString("latitude"));
-        place.setLatitude(latitude);
-
-        @Nullable
-        BigDecimal longitude = LangUtil.toDecimalOrNullIfEmpty(placeInfoJSON.optString("longitude"));
-        place.setLongitude(longitude);
-
-        @Nullable
-        Countries country = findCountryByName(placeInfoJSON.optString("country"));
-        place.setIdCountry(country);
-        place.setGuid(UUID.fromString(guid));
-        return place;
-
-    }
-
     @Nullable
     private Countries findCountryByName(String countryName) {
-        if (countryName != null) {
-            TypedQuery<Countries> typedQuery = entityManager.createQuery(
-                    "SELECT c FROM Countries c WHERE C.country= :countryName", Countries.class);
-            typedQuery.setParameter("countryName", countryName);
-            List<Countries> countries = typedQuery.getResultList();
-            if (!countries.isEmpty()) {
-                return countries.get(0);
-            } else {
-                return null;
-            }
+        TypedQuery<Countries> query = entityManager.createNamedQuery(
+                "Countries.findByCountry", Countries.class);
+        query.setParameter("country", countryName);
+        List<Countries> countries = query.getResultList();
+        if (!countries.isEmpty()) {
+            return countries.get(0);
         } else {
             return null;
         }
@@ -213,27 +170,26 @@ public class ClientReferencesHandler {
         boolean placeExists;
         if (place == null) {
             placeExists = false;
-            place = createPlace(placeInfoJSON, placeTypesLocal);
+            place = new Places(placeInfoJSON);
+            place.setIdPlaceType(placeTypesLocal);
+            String countryName = placeInfoJSON.getString("country");
+            Countries country = findCountryByName(countryName);
+            place.setIdCountry(country);
             //еще не сохранено в базе
         } else {
             placeExists = true;
         }
-
         JSONArray imagesJSONArrayForPlace = placeInfoJSON.getJSONArray("images");
         if (imagesJSONArrayForPlace.length() > 0) {
             Set<Integer> remoteImagesIdsForPlace = getRemoteImagesIdsForPlace(imagesJSONArrayForPlace);
-
             Map<Integer, Images> remoteImagesForPlace
                     = getImagesByIds(allRemoteImages, remoteImagesIdsForPlace);
-
             Collection<ImagesForPlace> imagesForPlace = place.getImagesForPlaceCollection();
             if (imagesForPlace == null || imagesForPlace.isEmpty()) {
-
                 List<ImagesForPlace> newImagesForPlace
                         = createNewImagesForPlace(place, remoteImagesForPlace.values());
                 place.setImagesForPlaceCollection(newImagesForPlace);
             } else {
-
                 Set<Images> newRemoteImagesIds
                         = getOnlyNewImages(imagesForPlace, remoteImagesForPlace);
                 if (!newRemoteImagesIds.isEmpty()) {
@@ -241,7 +197,6 @@ public class ClientReferencesHandler {
                             = createNewImagesForPlace(place, newRemoteImagesIds);
                     imagesForPlace.addAll(newImageForPlaces);
                 }
-
             }
         }
         if (placeExists) {
@@ -307,12 +262,42 @@ public class ClientReferencesHandler {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public String handleGetPlaces() {
+    public String getPlacesJSON() throws Exception {
+        TypedQuery<Places> query = entityManager.createNamedQuery("Places.findAll", Places.class);
+        List<Places> resultList = query.getResultList();
+        JSONObject result = new JSONObject();
+
+        JSONArray placesJSONArray = new JSONArray();
+        for (Places place : resultList) {
+            JSONObject placeJSONObject = place.toJSON();
+            placesJSONArray.put(placeJSONObject);
+        }
+        result.put("places", placesJSONArray);
+        return result.toString();
+    }
+
+    public String getThingsJSON() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public String handleGetThings() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public String getImagesJSON(String... guids) throws JSONException {
+        if (guids != null) {
+            List<UUID> uuids = new ArrayList<>(guids.length);
+            for (String guid : guids) {
+                uuids.add(UUID.fromString(guid));
+            }
+            TypedQuery<Images> query = entityManager.createQuery("SELECT i FROM "
+                    + "Images i WHERE i.guid IN :guids", Images.class);
+            query.setParameter("guids", uuids);
+            List<Images> images = query.getResultList();
+            JSONArray result = new JSONArray();
+            for (Images image : images) {
+                JSONObject jsonObject = image.toJSON();
+                result.put(jsonObject);
+            }
+            return result.toString();
+        }
+        return "[]";
     }
 
 }

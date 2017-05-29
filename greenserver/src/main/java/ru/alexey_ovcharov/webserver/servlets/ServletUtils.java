@@ -1,6 +1,7 @@
 package ru.alexey_ovcharov.webserver.servlets;
 
 import java.util.Enumeration;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -35,6 +36,33 @@ public class ServletUtils {
             builder.append("]}");
         }
         return builder.toString();
+    }
+
+    public static String paramsToString(Map<String, String[]> parametersMap) {
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean firstKey = true;
+        for (Map.Entry<String, String[]> entry : parametersMap.entrySet()) {
+            String key = entry.getKey();
+            String[] value = entry.getValue();
+            if (!firstKey) {
+                stringBuilder.append(",");
+            } else {
+                firstKey = false;
+            }
+            stringBuilder.append(key).append("=>").append("{");
+            boolean firstValue = true;
+            for (String string : value) {
+                if (!firstValue) {
+                    stringBuilder.append(",");
+                } else {
+                    firstValue = false;
+                }
+                stringBuilder.append(string);
+            }
+            stringBuilder.append("}");
+        }
+
+        return stringBuilder.toString();
     }
 
 }

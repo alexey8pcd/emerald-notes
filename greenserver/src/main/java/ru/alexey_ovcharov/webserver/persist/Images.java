@@ -109,7 +109,6 @@ public class Images implements Serializable {
 //            return new ByteArrayContent(new byte[0]);
 //        }
 //    }
-
     public void setImageData(byte[] imageData) {
         this.imageData = imageData;
     }
@@ -155,6 +154,13 @@ public class Images implements Serializable {
     @Override
     public String toString() {
         return "ru.alexey_ovcharov.webserver.Images[ idImage=" + idImage + " ]";
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject res = new JSONObject();
+        res.put("guid", guid.toString());
+        res.put("binary_data", Base64.encodeBase64String(imageData));
+        return res;
     }
 
 }

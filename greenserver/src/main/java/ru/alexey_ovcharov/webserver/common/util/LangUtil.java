@@ -1,4 +1,4 @@
-package ru.alexey_ovcharov.webserver.util;
+package ru.alexey_ovcharov.webserver.common.util;
 
 import java.math.BigDecimal;
 import org.apache.commons.lang.StringUtils;
