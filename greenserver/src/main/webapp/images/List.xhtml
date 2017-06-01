@@ -39,6 +39,12 @@
                             </f:facet>
                             <h:outputText value="#{item.imageData}"/>
                         </p:column>
+                         <p:column>
+                            <f:facet name="header">
+                                <!--<h:outputText value="#{bundle.ListImagesTitle_imageData}"/>-->
+                            </f:facet>
+                             <h:outputText value="#{item.guid}"/>
+                        </p:column>
                         <f:facet name="footer">
                             <p:commandButton id="createButton" icon="ui-icon-plus"   value="#{bundle.Create}" actionListener="#{imagesController.prepareCreate}" update=":ImagesCreateForm" oncomplete="PF('ImagesCreateDialog').show()"/>
                             <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" update=":ImagesViewForm" oncomplete="PF('ImagesViewDialog').show()" disabled="#{empty imagesController.selected}"/>

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.UUID;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -21,7 +22,7 @@ import ru.alexey_ovcharov.webserver.common.util.LoggerFactory;
  * @author Алексей
  */
 public class ClientReferencesReceiver extends HttpServlet {
-    
+
     private static final long MAX_REQUEST_LENGTH = 4_000_000_000L;//~500мб
     private static final String GET_TYPE = "/get";
     private static final String THINGS_DATA = "/things_data";
@@ -31,10 +32,10 @@ public class ClientReferencesReceiver extends HttpServlet {
     private static final String GUID_PARAM = "guid";
     @EJB
     private ClientReferencesHandler handler;
-    
+
     private final Logger logger = LoggerFactory.createConsoleLogger(
             ClientReferencesReceiver.class.getSimpleName());
-    
+
     @Override
     protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
             throws ServletException, IOException {
@@ -67,7 +68,7 @@ public class ClientReferencesReceiver extends HttpServlet {
             httpServletResponse.setContentType("text/html;charset=UTF-8");
         }
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse)
@@ -94,9 +95,9 @@ public class ClientReferencesReceiver extends HttpServlet {
             httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Превышено ограничение на длину запроса");
         }
-        
+
     }
-    
+
     private void returnData(String requestURI, Map<String, String[]> parametersMap,
             HttpServletResponse httpServletResponse) throws Exception {
         int indexOf = requestURI.lastIndexOf("/");
@@ -119,8 +120,7 @@ public class ClientReferencesReceiver extends HttpServlet {
         httpServletResponse.setContentType("application/json;charset=UTF-8");
         httpServletResponse.getWriter().write(response);
     }
-    
-    
+
     private void saveData(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws Exception {
         String characterEncoding = StringUtils.defaultString(httpServletRequest.getHeader("charset"), "UTF-8");
@@ -128,23 +128,33 @@ public class ClientReferencesReceiver extends HttpServlet {
         String requestURI = httpServletRequest.getRequestURI();
         int indexOf = requestURI.indexOf(SEND_TYPE);
         String command = requestURI.substring(indexOf + SEND_TYPE.length());
-        String request = getResponseBody(httpServletRequest, characterEncoding);
-        //                logger.info("Тело запроса: " + request);
-        JSONObject jSONObject = new JSONObject(request);
-        switch (command) {
-            case PLACES_DATA:
-                handler.handleReceivePlaces(jSONObject);
-                break;
-            case THINGS_DATA:
-                handler.handleReceiveThings(jSONObject);
-                break;
-            default:
-                httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
+        String imageGuid = httpServletRequest.getHeader(IMAGE_GUID);
+        if (IMAGES_DATA.equals(command) && StringUtils.isNotBlank(imageGuid) && checkUUID(imageGuid)) {
+            logger.info("Получил запрос на сохранение изображения");
+            handler.handleReceiveImage(httpServletRequest.getInputStream(), imageGuid);
+        } else {
+            String request = getResponseBody(httpServletRequest, characterEncoding);
+            logger.info("Тело запроса: " + request);
+            JSONObject jSONObject = new JSONObject();
+            if (StringUtils.isNotBlank(request) && request.startsWith("{")) {
+                jSONObject = new JSONObject(request);
+            }
+            switch (command) {
+                case PLACES_DATA:
+                    handler.handleReceivePlaces(jSONObject);
+                    break;
+                case THINGS_DATA:
+                    handler.handleReceiveThings(jSONObject);
+                    break;
+                default:
+                    httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+            }
         }
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
-    
+    private static final String IMAGE_GUID = "image-guid";
+
     private String getResponseBody(HttpServletRequest httpServletRequest, String characterEncoding) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(
@@ -157,10 +167,15 @@ public class ClientReferencesReceiver extends HttpServlet {
         String request = sb.toString();
         return request;
     }
-    
+
     @Override
     public String getServletInfo() {
         return "ClientReferencesReceiver for public client data";
     }
-    
+
+    private boolean checkUUID(String imageHeader) {
+        UUID.fromString(imageHeader);
+        return true;
+    }
+
 }

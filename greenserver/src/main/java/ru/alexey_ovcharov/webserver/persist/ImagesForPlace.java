@@ -34,7 +34,8 @@ public class ImagesForPlace implements Serializable {
     @Column(name = "id_image_for_place")
     private Long idImageForPlace;
     @JoinColumn(name = "id_image", referencedColumnName = "id_image")
-    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, 
+            cascade = CascadeType.ALL)
     private Images idImage;
     @JoinColumn(name = "id_place", referencedColumnName = "id_place")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
