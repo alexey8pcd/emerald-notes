@@ -143,26 +143,8 @@ CREATE TABLE public.images
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE public.images
+ALTER TABLE public.images OWNER TO postgres;
 
-CREATE TABLE public.images_for_place
-(
-  id_image_for_place bigint NOT NULL DEFAULT nextval('images_for_place_id_image_for_place_seq'::regclass),
-  id_image integer NOT NULL,
-  id_place integer NOT NULL,
-  CONSTRAINT images_for_place_pkey PRIMARY KEY (id_image_for_place),
-  CONSTRAINT "REL_1" FOREIGN KEY (id_image)
-      REFERENCES public.images (id_image) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT "REL_2" FOREIGN KEY (id_place)
-      REFERENCES public.places (id_place) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE RESTRICT
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE public.images_for_place
-  OWNER TO postgres;
 
 CREATE TABLE public.images_for_thing
 (
@@ -281,6 +263,24 @@ WITH (
 ALTER TABLE public.places
   OWNER TO postgres;
 
+CREATE TABLE public.images_for_place
+(
+  id_image_for_place bigint NOT NULL DEFAULT nextval('images_for_place_id_image_for_place_seq'::regclass),
+  id_image integer NOT NULL,
+  id_place integer NOT NULL,
+  CONSTRAINT images_for_place_pkey PRIMARY KEY (id_image_for_place),
+  CONSTRAINT "REL_1" FOREIGN KEY (id_image)
+      REFERENCES public.images (id_image) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT "REL_2" FOREIGN KEY (id_place)
+      REFERENCES public.places (id_place) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.images_for_place
+  OWNER TO postgres;
 
 CREATE TABLE public.things
 (
