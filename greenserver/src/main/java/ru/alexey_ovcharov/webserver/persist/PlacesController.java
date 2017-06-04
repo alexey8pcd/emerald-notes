@@ -12,10 +12,12 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
+import org.primefaces.model.UploadedFile;
 
 @Named("placesController")
 @SessionScoped
@@ -25,6 +27,15 @@ public class PlacesController implements Serializable {
     private ru.alexey_ovcharov.webserver.persist.PlacesFacade ejbFacade;
     private List<Places> items = null;
     private Places selected;
+    private UploadedFile file;
+
+    public UploadedFile getFile() {
+        return file;
+    }
+
+    public void setFile(UploadedFile file) {
+        this.file = file;
+    }
 
     public PlacesController() {
     }
@@ -84,7 +95,11 @@ public class PlacesController implements Serializable {
             setEmbeddableKeys();
             try {
                 if (persistAction != PersistAction.DELETE) {
+                    if (file != null) {
+                        System.out.println(file);
+                    }
                     getFacade().edit(selected);
+
                 } else {
                     getFacade().remove(selected);
                 }

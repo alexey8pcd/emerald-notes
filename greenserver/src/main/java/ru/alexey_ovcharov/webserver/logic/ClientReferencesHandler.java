@@ -1,6 +1,5 @@
 package ru.alexey_ovcharov.webserver.logic;
 
-import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -19,7 +18,6 @@ import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.servlet.ServletInputStream;
 import javax.transaction.UserTransaction;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -257,7 +255,7 @@ public class ClientReferencesHandler {
     }
 
     public void handleReceiveThings(JSONObject jSONObject) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String getPlacesJSON() throws Exception {
@@ -275,7 +273,7 @@ public class ClientReferencesHandler {
     }
 
     public String getThingsJSON() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String getImagesJSON(String... guids) throws JSONException {
@@ -298,8 +296,7 @@ public class ClientReferencesHandler {
         return "[]";
     }
 
-    public void handleReceiveImage(ServletInputStream inputStream, 
-            String imageGuid) throws Exception {
+    public void handleReceiveImage(byte[] imageData, String imageGuid) throws Exception {
         UserTransaction transaction = context.getUserTransaction();
         try {
             transaction.begin();
@@ -310,13 +307,6 @@ public class ClientReferencesHandler {
             UUID uuid = UUID.fromString(imageGuid);
             query.setParameter("guidp", uuid);
             List<Images> resultList = query.getResultList();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1 << 13];
-            while (inputStream.read(buffer) > 0) {
-                baos.write(buffer);
-            }
-            byte[] imageData = baos.toByteArray();
-
             if (resultList.isEmpty()) {
                 Images image = new Images();
                 image.setGuid(uuid);

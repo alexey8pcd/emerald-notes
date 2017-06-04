@@ -102,13 +102,15 @@ public class Images implements Serializable {
         return imageData;
     }
 
-//    public StreamedContent getStreamedContent() {
-//        if (imageData != null) {
-//            return new ByteArrayContent(imageData, "image/png");
-//        } else {
-//            return new ByteArrayContent(new byte[0]);
-//        }
-//    }
+    public StreamedContent getStreamedContent() {
+        if (imageData != null) {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
+            return new DefaultStreamedContent(inputStream, "image/png");
+        } else {
+            return new ByteArrayContent(new byte[0]);
+        }
+    }
+    
     public void setImageData(byte[] imageData) {
         this.imageData = imageData;
     }

@@ -1,16 +1,19 @@
 package ru.alexey_ovcharov.webserver.servlets;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.CRC32;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
@@ -35,6 +38,9 @@ public class ClientReferencesReceiver extends HttpServlet {
 
     private final Logger logger = LoggerFactory.createConsoleLogger(
             ClientReferencesReceiver.class.getSimpleName());
+    private static final String DATA_SIZE = "data-size";
+    private static final String CRC_32 = "crc32";
+    private static final String IMAGE_GUID = "image-guid";
 
     @Override
     protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
@@ -83,8 +89,10 @@ public class ClientReferencesReceiver extends HttpServlet {
             try {
                 String requestURI = httpServletRequest.getRequestURI();
                 if (requestURI.contains(SEND_TYPE)) {
+                    logger.info("Сохраняю данные");
                     saveData(httpServletRequest, httpServletResponse);
                 } else if (requestURI.contains(GET_TYPE)) {
+                    logger.info("Передаю данные");
                     returnData(requestURI, parametersMap, httpServletResponse);
                 }
             } catch (Exception e) {
@@ -131,7 +139,27 @@ public class ClientReferencesReceiver extends HttpServlet {
         String imageGuid = httpServletRequest.getHeader(IMAGE_GUID);
         if (IMAGES_DATA.equals(command) && StringUtils.isNotBlank(imageGuid) && checkUUID(imageGuid)) {
             logger.info("Получил запрос на сохранение изображения");
-            handler.handleReceiveImage(httpServletRequest.getInputStream(), imageGuid);
+            String imageSize = httpServletRequest.getHeader(DATA_SIZE);
+            int size = Integer.parseInt(imageSize);
+            String imageCrc = httpServletRequest.getHeader(CRC_32);
+            long inputImageChecksum = Long.parseLong(imageCrc);
+            byte[] imageData = IOUtils.toByteArray(httpServletRequest.getInputStream());
+            if (imageData.length == size) {
+                CRC32 crC32 = new CRC32();
+                crC32.update(imageData);
+                long calculatedChecksum = crC32.getValue();
+                if (calculatedChecksum == inputImageChecksum) {
+                    handler.handleReceiveImage(imageData, imageGuid);
+                } else {
+                    httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, 
+                            "Data length invalid");
+                    return;
+                }
+            } else {
+                httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, 
+                        "Checksums not equals");
+                return;
+            }
         } else {
             String request = getResponseBody(httpServletRequest, characterEncoding);
             logger.info("Тело запроса: " + request);
@@ -141,9 +169,11 @@ public class ClientReferencesReceiver extends HttpServlet {
             }
             switch (command) {
                 case PLACES_DATA:
+                    logger.info("Получил запрос на сохранение мест");
                     handler.handleReceivePlaces(jSONObject);
                     break;
                 case THINGS_DATA:
+                    logger.info("Получил запрос на сохранение вещей");
                     handler.handleReceiveThings(jSONObject);
                     break;
                 default:
@@ -153,7 +183,7 @@ public class ClientReferencesReceiver extends HttpServlet {
         }
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
-    private static final String IMAGE_GUID = "image-guid";
+    
 
     private String getResponseBody(HttpServletRequest httpServletRequest, String characterEncoding) throws IOException {
         StringBuilder sb = new StringBuilder();

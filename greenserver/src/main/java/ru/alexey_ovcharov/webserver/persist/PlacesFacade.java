@@ -18,6 +18,13 @@ public class PlacesFacade extends AbstractFacade<Places> {
         return em;
     }
 
+    @Override
+    public void edit(Places entity) {
+        super.edit(entity); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+
     public PlacesFacade() {
         super(Places.class);
     }
