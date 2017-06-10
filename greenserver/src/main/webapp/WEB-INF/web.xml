@@ -11,7 +11,7 @@
     </servlet>
     <servlet>
         <servlet-name>ClientReferencesReceiver</servlet-name>
-        <servlet-class>ru.alexey_ovcharov.webserver.servlets.ClientReferencesReceiver</servlet-class>
+        <servlet-class>ru.alexey_ovcharov.webserver.servlets.ClientReferencesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>

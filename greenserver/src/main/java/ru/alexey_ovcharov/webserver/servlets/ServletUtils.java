@@ -3,6 +3,7 @@ package ru.alexey_ovcharov.webserver.servlets;
 import java.util.Enumeration;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import ru.alexey_ovcharov.webserver.common.util.Nullable;
 
 /**
  * @author Alexey
@@ -63,6 +64,20 @@ public class ServletUtils {
         }
 
         return stringBuilder.toString();
+    }
+
+    @Nullable
+    public static String getFirstParameter(Map<String, String[]> parametersMap, String name) {
+        if (parametersMap == null || parametersMap.isEmpty()) {
+            return null;
+        } else {
+            String[] strings = parametersMap.get(name);
+            if (strings == null || strings.length == 0) {
+                return null;
+            } else {
+                return strings[0];
+            }
+        }
     }
 
 }

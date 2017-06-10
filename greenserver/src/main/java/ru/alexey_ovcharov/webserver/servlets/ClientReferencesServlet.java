@@ -15,16 +15,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
-import ru.alexey_ovcharov.webserver.logic.ClientReferencesHandler;
+import ru.alexey_ovcharov.webserver.logic.ClientReferencesSaver;
 import ru.alexey_ovcharov.webserver.common.util.LoggerFactory;
+import ru.alexey_ovcharov.webserver.logic.ClientReferencesUpdateHandler;
 
 /**
  *
  * @author Алексей
  */
-public class ClientReferencesReceiver extends HttpServlet {
+public class ClientReferencesServlet extends HttpServlet {
 
     private static final long MAX_REQUEST_LENGTH = 4_000_000_000L;//~500мб
     private static final String GET_TYPE = "/get";
@@ -34,13 +36,15 @@ public class ClientReferencesReceiver extends HttpServlet {
     private static final String SEND_TYPE = "/send";
     private static final String GUID_PARAM = "guid";
     @EJB
-    private ClientReferencesHandler handler;
+    private ClientReferencesSaver receiveHandler;
+    @EJB
+    private ClientReferencesUpdateHandler updateHandler;
 
-    private final Logger logger = LoggerFactory.createConsoleLogger(
-            ClientReferencesReceiver.class.getSimpleName());
+    private final Logger logger = LoggerFactory.createConsoleLogger(ClientReferencesServlet.class.getSimpleName());
     private static final String DATA_SIZE = "data-size";
     private static final String CRC_32 = "crc32";
     private static final String IMAGE_GUID = "image-guid";
+    private static final String CRITERIA = "criteria";
 
     @Override
     protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
@@ -109,17 +113,26 @@ public class ClientReferencesReceiver extends HttpServlet {
     private void returnData(String requestURI, Map<String, String[]> parametersMap,
             HttpServletResponse httpServletResponse) throws Exception {
         int indexOf = requestURI.lastIndexOf("/");
+        String offsetParam = ServletUtils.getFirstParameter(parametersMap, OFFSET);
+        int offset = NumberUtils.toInt(offsetParam, 0);
+        
+        String limitParam = ServletUtils.getFirstParameter(parametersMap, LIMIT);
+        int limit = NumberUtils.toInt(limitParam, Integer.MAX_VALUE);
+        
+        String criteriaParam = ServletUtils.getFirstParameter(parametersMap, CRITERIA);
+        
         String command = requestURI.substring(indexOf);
         String response;
         switch (command) {
             case PLACES_DATA:
-                response = handler.getPlacesJSON();
+                //для мест критерием является город
+                response = updateHandler.getPlacesJSON(offset, limit, criteriaParam);
                 break;
             case THINGS_DATA:
-                response = handler.getThingsJSON();
+                response = updateHandler.getThingsJSON();
                 break;
             case IMAGES_DATA:
-                response = handler.getImagesJSON(parametersMap.get(GUID_PARAM));
+                response = updateHandler.getImagesJSON(parametersMap.get(GUID_PARAM));
                 break;
             default:
                 httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -128,6 +141,8 @@ public class ClientReferencesReceiver extends HttpServlet {
         httpServletResponse.setContentType("application/json;charset=UTF-8");
         httpServletResponse.getWriter().write(response);
     }
+    private static final String OFFSET = "offset";
+    private static final String LIMIT = "limit";
 
     private void saveData(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws Exception {
@@ -149,7 +164,7 @@ public class ClientReferencesReceiver extends HttpServlet {
                 crC32.update(imageData);
                 long calculatedChecksum = crC32.getValue();
                 if (calculatedChecksum == inputImageChecksum) {
-                    handler.handleReceiveImage(imageData, imageGuid);
+                    receiveHandler.saveImage(imageData, imageGuid);
                 } else {
                     httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, 
                             "Data length invalid");
@@ -170,11 +185,11 @@ public class ClientReferencesReceiver extends HttpServlet {
             switch (command) {
                 case PLACES_DATA:
                     logger.info("Получил запрос на сохранение мест");
-                    handler.handleReceivePlaces(jSONObject);
+                    receiveHandler.savePlaces(jSONObject);
                     break;
                 case THINGS_DATA:
                     logger.info("Получил запрос на сохранение вещей");
-                    handler.handleReceiveThings(jSONObject);
+                    receiveHandler.saveThings(jSONObject);
                     break;
                 default:
                     httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);

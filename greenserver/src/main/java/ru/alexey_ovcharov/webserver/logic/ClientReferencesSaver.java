@@ -37,9 +37,10 @@ import ru.alexey_ovcharov.webserver.common.util.Nullable;
  */
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
-public class ClientReferencesHandler {
+public class ClientReferencesSaver {
 
-    private final Logger logger = LoggerFactory.createConsoleLogger("referenceHandler");
+    private final Logger logger
+            = LoggerFactory.createConsoleLogger(getClass().getSimpleName());
 
     @PersistenceContext(unitName = "ru.alexey_ovcharov_webserver_war_1.0PU")
     private EntityManager entityManager;
@@ -47,16 +48,16 @@ public class ClientReferencesHandler {
     @Resource
     private EJBContext context;
 
-    public ClientReferencesHandler() {
+    public ClientReferencesSaver() {
     }
 
-    public void handleReceivePlaces(JSONObject requestAsJSON) throws Exception {
+    public void savePlaces(JSONObject placesJSON) throws Exception {
         logger.debug("Обрабатываю запрос слияния справочников с удаленного устройства");
         UserTransaction transaction = context.getUserTransaction();
         try {
             transaction.begin();
-            Map<Integer, PlaceTypes> linkedPlaceTypes = getPlacesTypesBinding(requestAsJSON);
-            JSONArray placesJSONArray = requestAsJSON.getJSONArray("places");
+            Map<Integer, PlaceTypes> linkedPlaceTypes = getPlacesTypesBinding(placesJSON);
+            JSONArray placesJSONArray = placesJSON.getJSONArray("places");
             for (int i = 0; i < placesJSONArray.length(); ++i) {
                 JSONObject placeInfoJSON = placesJSONArray.getJSONObject(i);
                 parsePlaceInfo(placeInfoJSON, linkedPlaceTypes);
@@ -70,6 +71,49 @@ public class ClientReferencesHandler {
             }
             throw ex;
         }
+    }
+
+    public void saveNotes(JSONObject notesJSON) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void saveThings(JSONObject jSONObject) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void saveImage(byte[] imageData, String imageGuid) throws Exception {
+        logger.debug("Отрабатываю запрос на слияние изображений");
+        UserTransaction transaction = context.getUserTransaction();
+        try {
+            transaction.begin();
+            entityManager.flush();
+            entityManager.clear();
+            TypedQuery<Images> query = entityManager.createQuery(
+                    "SELECT i FROM Images i WHERE i.guid=:guidp", Images.class);
+            UUID uuid = UUID.fromString(imageGuid);
+            query.setParameter("guidp", uuid);
+            List<Images> resultList = query.getResultList();
+            if (resultList.isEmpty()) {
+                Images image = new Images();
+                image.setGuid(uuid);
+                image.setImageData(imageData);
+                entityManager.persist(image);
+            } else {
+                Images image = resultList.get(0);
+                image.setImageData(imageData);
+                entityManager.merge(image);
+            }
+            entityManager.flush();
+            transaction.commit();
+            logger.debug("Завершено успешно");
+        } catch (Exception ex) {
+            logger.error(ex, ex);
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw ex;
+        }
+
     }
 
     @NotNull
@@ -160,6 +204,16 @@ public class ClientReferencesHandler {
         return imagesForPlaces;
     }
 
+    @NotNull
+    private Map<Integer, Images> getImagesByIds(Map<Integer, Images> allRemoteImages,
+            Set<Integer> remoteImagesIdsForPlace) {
+        Map<Integer, Images> result = new HashMap<>();
+        for (Integer idRemoteImage : remoteImagesIdsForPlace) {
+            result.put(idRemoteImage, allRemoteImages.get(idRemoteImage));
+        }
+        return result;
+    }
+
     private void parsePlaceInfo(JSONObject placeInfoJSON,
             Map<Integer, PlaceTypes> linkedPlaceTypes) throws Exception {
 
@@ -213,18 +267,6 @@ public class ClientReferencesHandler {
     }
 
     @NotNull
-    private Map<Integer, Images> getImages(JSONArray jsonArray)
-            throws JSONException, UnsupportedEncodingException {
-        Map<Integer, Images> result = new HashMap<>(jsonArray.length());
-        for (int i = 0; i < jsonArray.length(); ++i) {
-            JSONObject imageJSON = jsonArray.getJSONObject(i);
-            Images image = new Images(imageJSON);
-            result.put(image.getIdImage(), image);
-        }
-        return result;
-    }
-
-    @NotNull
     private Set<UUID> getOnlyNewImages(
             Collection<ImagesForPlace> imagesForPlaceExists, Set<UUID> remoteImagesUUIDSForPlace) {
         Set<UUID> result = new HashSet<>();
@@ -242,92 +284,6 @@ public class ClientReferencesHandler {
             }
         }
         return result;
-    }
-
-    @NotNull
-    private Map<Integer, Images> getImagesByIds(Map<Integer, Images> allRemoteImages,
-            Set<Integer> remoteImagesIdsForPlace) {
-        Map<Integer, Images> result = new HashMap<>();
-        for (Integer idRemoteImage : remoteImagesIdsForPlace) {
-            result.put(idRemoteImage, allRemoteImages.get(idRemoteImage));
-        }
-        return result;
-    }
-
-    public void handleReceiveThings(JSONObject jSONObject) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public String getPlacesJSON() throws Exception {
-        TypedQuery<Places> query = entityManager.createNamedQuery("Places.findAll", Places.class);
-        List<Places> resultList = query.getResultList();
-        JSONObject result = new JSONObject();
-
-        JSONArray placesJSONArray = new JSONArray();
-        for (Places place : resultList) {
-            JSONObject placeJSONObject = place.toJSON();
-            placesJSONArray.put(placeJSONObject);
-        }
-        result.put("places", placesJSONArray);
-        return result.toString();
-    }
-
-    public String getThingsJSON() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public String getImagesJSON(String... guids) throws JSONException {
-        if (guids != null) {
-            List<UUID> uuids = new ArrayList<>(guids.length);
-            for (String guid : guids) {
-                uuids.add(UUID.fromString(guid));
-            }
-            TypedQuery<Images> query = entityManager.createQuery("SELECT i FROM "
-                    + "Images i WHERE i.guid IN :guids", Images.class);
-            query.setParameter("guids", uuids);
-            List<Images> images = query.getResultList();
-            JSONArray result = new JSONArray();
-            for (Images image : images) {
-                JSONObject jsonObject = image.toJSON();
-                result.put(jsonObject);
-            }
-            return result.toString();
-        }
-        return "[]";
-    }
-
-    public void handleReceiveImage(byte[] imageData, String imageGuid) throws Exception {
-        UserTransaction transaction = context.getUserTransaction();
-        try {
-            transaction.begin();
-            entityManager.flush();
-            entityManager.clear();
-            TypedQuery<Images> query = entityManager.createQuery(
-                    "SELECT i FROM Images i WHERE i.guid=:guidp", Images.class);
-            UUID uuid = UUID.fromString(imageGuid);
-            query.setParameter("guidp", uuid);
-            List<Images> resultList = query.getResultList();
-            if (resultList.isEmpty()) {
-                Images image = new Images();
-                image.setGuid(uuid);
-                image.setImageData(imageData);
-                entityManager.persist(image);
-            } else {
-                Images image = resultList.get(0);
-                image.setImageData(imageData);
-                entityManager.merge(image);
-            }
-            entityManager.flush();
-            transaction.commit();
-            logger.debug("Завершено успешно");
-        } catch (Exception ex) {
-            logger.error(ex, ex);
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            throw ex;
-        }
-
     }
 
 }
