@@ -9,30 +9,25 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
@@ -198,16 +193,16 @@ public class ShowPlaceActivity extends Activity {
                         Uri imageUrl = data.getData();
                         Log.d(APP_NAME, "Выбрано изображение на устройстве: " + imageUrl);
                         String selectedImageURI = imageUrl.toString();
-                        long idImage = dbHelper.addImage(selectedImageURI);
-                        placeWithImages.addImageId((int) idImage);
+                        Image image = dbHelper.addImage(selectedImageURI);
+                        placeWithImages.addImage(image);
 
                     }
                 } else if (requestCode == CAMERA_REQUEST) {
                     if (tempImageUri != null) {
                         String imageUrl = tempImageUri.toString();
                         Log.d(APP_NAME, "Сделан снимок с камеры: " + imageUrl);
-                        long idImage = dbHelper.addImage(imageUrl);
-                        placeWithImages.addImageId((int) idImage);
+                        Image image = dbHelper.addImage(imageUrl);
+                        placeWithImages.addImageId(image);
                     }
                 }
                 dbHelper.updatePlace(placeWithImages);
@@ -240,12 +235,12 @@ public class ShowPlaceActivity extends Activity {
 
     private void loadImages() {
         if (placeWithImages != null) {
-            bitmaps = placeWithImages.getImagesBitmaps(dbHelper, getContentResolver());
+            bitmaps = placeWithImages.getImagesBitmaps(getContentResolver());
             try {
                 if (bitmaps != null) {
                     tvPhotos.setText("Фотографии места, количество: " + bitmaps.size());
                     imagesView.setAdapter(new ImageAdapter(this, bitmaps));
-                    if (bitmaps.size() != placeWithImages.getImagesIds().size()) {
+                    if (bitmaps.size() != placeWithImages.getImages().size()) {
                         Toast.makeText(this, "Не все изображения были открыть успешно", Toast.LENGTH_LONG).show();
                     }
 

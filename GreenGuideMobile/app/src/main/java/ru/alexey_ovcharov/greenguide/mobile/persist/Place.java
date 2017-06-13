@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -81,7 +82,7 @@ public class Place {
     private String dateCreate;
     private int idPlaceType;
     private Integer idCountry;
-    private List<Integer> imagesInfo = new ArrayList<>(1);
+    private List<Image> imagesInfo = new ArrayList<>(1);
     private String guid;
 
     public Place(JSONObject placeJson) throws JSONException, ParseException {
@@ -100,12 +101,12 @@ public class Place {
         }
     }
 
-    public List<Integer> getImagesIds() {
+    public List<Image> getImages() {
         return imagesInfo;
     }
 
-    public void addImageId(int idImage) {
-        imagesInfo.add(idImage);
+    public void addImageId(Image image) {
+        imagesInfo.add(image);
     }
 
     public Place() {
@@ -228,8 +229,8 @@ public class Place {
         this.idPlaceType = idPlaceType;
     }
 
-    public void addImageInfo(int idImage) {
-        this.imagesInfo.add(idImage);
+    public void addImage(Image image) {
+        this.imagesInfo.add(image);
     }
 
     public JSONObject toJsonObject(Map<Integer, String> countries, Context context)
@@ -245,30 +246,26 @@ public class Place {
         jsonObject.put(ID_PLACE_TYPE_COLUMN, idPlaceType);
         jsonObject.put(Entity.GUID_COLUMN_NAME, guid);
         JSONArray imagesJsonArray = new JSONArray();
-        for (Integer imageId : imagesInfo) {
-            imagesJsonArray.put(imageId);
+        for (Image image : imagesInfo) {
+            imagesJsonArray.put(image.getGuid());
         }
         jsonObject.put("images", imagesJsonArray);
         return jsonObject;
     }
 
     @NonNull
-    public List<Image.ImageDataWrapper<Bitmap>> getImagesBitmaps(DbHelper dbHelper, ContentResolver contentResolver) {
+    public List<Image.ImageDataWrapper<Bitmap>> getImagesBitmaps(ContentResolver contentResolver) {
         try {
             List<Image.ImageDataWrapper<Bitmap>> imageDataWrappers = new ArrayList<>(imagesInfo.size());
-            List<String> imageIds = new ArrayList<>();
-            boolean success = imagesInfo.size() > 0;
-            for (Integer idImage : imagesInfo) {
+            for (Image image : imagesInfo) {
                 try {
-                    List<Image> imageData = dbHelper.getImageData(Collections.singletonList(idImage));
-                    Image image = imageData.get(0);
                     if (image.getUrl() != null) {
                         Uri imageUrl = Uri.parse(image.getUrl());
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUrl);
-                        imageDataWrappers.add(new Image.ImageDataWrapper(idImage, bitmap));
+                        InputStream in = contentResolver.openInputStream(imageUrl);
+                        Bitmap bitmap = BitmapFactory.decodeStream(in, null, null);
+                        imageDataWrappers.add(new Image.ImageDataWrapper(image.getIdImage(), bitmap));
                     }
                 } catch (Exception e) {
-                    success = false;
                     Log.e(Commons.APP_NAME, e.toString(), e);
                 }
             }
@@ -279,14 +276,8 @@ public class Place {
         return Collections.EMPTY_LIST;
     }
 
-    public void addImageIds(Collection<Integer> imagesId) {
-        imagesInfo.addAll(imagesId);
-    }
-
     public void addImages(Collection<Image> images) {
-        for (Image image : images) {
-            imagesInfo.add(image.getIdImage());
-        }
+        imagesInfo.addAll(images);
     }
 
     @Nullable

@@ -23,6 +23,7 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.android.support:support-v4:25.0.0'
     compile 'com.android.support:design:25.3.1'

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/item_row"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <ImageView
+            android:id="@+id/ir_image"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="48dp"
+            app:srcCompat="@color/app_color" />
+
+        <Space
+            android:layout_width="2dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ir_title"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="wrap_content"
+            android:text="Название"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="2dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ir_description"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="wrap_content"
+            android:text="Описание"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="2dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ir_country"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="wrap_content"
+            android:text="Страна-производитель"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="2dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ir_destruction_time"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="wrap_content"
+            android:text="Время разложения"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="2dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ir_dangerous_for_environment"
+            android:layout_width="0dp"
+            android:layout_weight="0.16"
+            android:layout_height="wrap_content"
+            android:text="Опасность для окружающей среды"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

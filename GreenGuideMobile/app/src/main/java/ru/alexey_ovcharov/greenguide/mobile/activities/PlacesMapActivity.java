@@ -343,10 +343,10 @@ public class PlacesMapActivity extends FragmentActivity implements OnMapReadyCal
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             if (position != ALL_CATEGORIES_POSITION) {
                 chosenPlaceTypeIndex = placesTypes.get(position - 1).getIdPlaceType();
-                fillMapAsync();
             } else {
                 chosenPlaceTypeIndex = ALL_CATEGORIES_INDEX;
             }
+            fillMapAsync();
         }
 
         @Override

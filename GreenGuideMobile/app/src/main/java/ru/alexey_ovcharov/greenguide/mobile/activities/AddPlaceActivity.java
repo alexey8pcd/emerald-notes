@@ -45,6 +45,7 @@ import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.Mapper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Place;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PlaceType;
@@ -290,11 +291,9 @@ public class AddPlaceActivity extends Activity {
                         @Override
                         protected Void doInBackground(Void... params) {
                             try {
-                                long idImage = dbHelper.addImage(selectedImageURI);
-                                if (idImage != DbHelper.ROW_NOT_EXIST) {
-                                    place.addImageId((int) idImage);
-                                    dbHelper.addPlace(place);
-                                }
+                                Image image = dbHelper.addImage(selectedImageURI);
+                                place.addImage(image);
+                                dbHelper.addPlace(place);
                             } catch (PersistenceException ex) {
                                 ex.log();
                             }

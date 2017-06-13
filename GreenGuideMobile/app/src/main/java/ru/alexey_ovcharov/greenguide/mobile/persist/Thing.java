@@ -1,5 +1,7 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import android.database.Cursor;
+
 import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
 
 /**
@@ -31,28 +33,56 @@ public class Thing {
             Entity.GUID_COLUMN_NAME + " VARCHAR (36) NOT NULL UNIQUE)";
     public static final String IMAGE_FOR_THING_TABLE_NAME = "images_for_thing";
     public static final String ID_IMAGE_FOR_THING_COLUMN = "id_image_for_thing";
-    public static final String IMAGE_COLUMN = "image";
 
     public static final String IMAGE_FOR_THING_DROP_SCRIPT = "DROP TABLE IF EXISTS "
             + IMAGE_FOR_THING_TABLE_NAME + ";";
     public static final String IMAGE_FOR_THING_CREATE_SCRIPT =
             "CREATE TABLE " + IMAGE_FOR_THING_TABLE_NAME + " (" +
-                    ID_IMAGE_FOR_THING_COLUMN + " INTEGER NOT NULL, " +
-                    ID_THING_COLUMN + " INTEGER NOT NULL REFERENCES things (id_thing) " +
-                    "           ON DELETE RESTRICT ON UPDATE CASCADE, " +
-                    IMAGE_COLUMN + " VARCHAR NOT NULL)";
-
+                    ID_IMAGE_FOR_THING_COLUMN + " INTEGER PRIMARY KEY NOT NULL, " +
+                    ID_THING_COLUMN + " INTEGER NOT NULL, " +
+                    Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL)";
+    public static final String[] DANGER_LABELS = {
+            "Нет данных",
+            "Не опасно",
+            "Малоопасно",
+            "Умеренно опасно",
+            "Опасно",
+            "Очень опасно",
+    };
 
     private int idThing;
     private String name;
     private String description;
     private int dangerForEnvironment;
-    private int decompositionTime;
-    private int idCountry;
+    private Integer decompositionTime;
+    private Integer idCountry;
     private int idCategory;
     private String guid;
+    private Image image;
 
     public Thing() {
+    }
+
+    public Thing(Cursor cursor) {
+        idThing = cursor.getInt(cursor.getColumnIndex(ID_THING_COLUMN));
+        name = cursor.getString(cursor.getColumnIndex(NAME_COLUMN));
+        description = cursor.getString(cursor.getColumnIndex(DESCRIPTION_COLUMN));
+        dangerForEnvironment = cursor.getInt(cursor.getColumnIndex(DANGER_FOR_ENVIRONMENT_COLUMN));
+        decompositionTime = cursor.getInt(cursor.getColumnIndex(DECOMPOSITION_TIME_COLUMN));
+        idCountry = cursor.getInt(cursor.getColumnIndex(ID_COUNTRY_COLUMN));
+        idCategory = cursor.getInt(cursor.getColumnIndex(ID_CATEGORY_COLUMN));
+        guid = cursor.getString(cursor.getColumnIndex(GUID_COLUMN_NAME));
+    }
+
+    public Image getImage() {
+        return image;
+    }
+
+    public Thing(String name, String description, int dangerForEnvironment, Integer decompositionTimeMonth) {
+        this.name = name;
+        this.description = description;
+        this.dangerForEnvironment = dangerForEnvironment;
+        this.decompositionTime = decompositionTimeMonth;
     }
 
     public String getGuid() {
@@ -91,19 +121,19 @@ public class Thing {
         this.dangerForEnvironment = dangerForEnvironment;
     }
 
-    public int getDecompositionTime() {
+    public Integer getDecompositionTime() {
         return decompositionTime;
     }
 
-    public void setDecompositionTime(int decompositionTime) {
+    public void setDecompositionTime(Integer decompositionTime) {
         this.decompositionTime = decompositionTime;
     }
 
-    public int getIdCountry() {
+    public Integer getIdCountry() {
         return idCountry;
     }
 
-    public void setIdCountry(int idCountry) {
+    public void setIdCountry(Integer idCountry) {
         this.idCountry = idCountry;
     }
 
@@ -115,4 +145,7 @@ public class Thing {
         this.idCategory = idCategory;
     }
 
+    public void setImage(Image image) {
+        this.image = image;
+    }
 }

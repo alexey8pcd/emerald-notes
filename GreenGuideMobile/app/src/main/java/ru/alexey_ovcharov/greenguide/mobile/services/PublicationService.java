@@ -3,20 +3,20 @@ package ru.alexey_ovcharov.greenguide.mobile.services;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
+import ru.alexey_ovcharov.greenguide.mobile.network.DataPackage;
+import ru.alexey_ovcharov.greenguide.mobile.network.HttpClient;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
@@ -35,6 +37,7 @@ import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 public class PublicationService extends Service {
 
     public static final String SEND_COMMAND = "/send";
+    public static final String IMAGE_GUID = "image-guid";
     private DbHelper dbHelper;
 
     public PublicationService() {
@@ -61,17 +64,53 @@ public class PublicationService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                HttpClient httpClientPlaces = null;
                 try {
+                    String serverUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
+
+                    String placesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.PLACES_DATA_URL_PART;
+                    httpClientPlaces = new HttpClient(serverUrl + placesUrlParts);
+
+                    ContentResolver contentResolver = getContentResolver();
+
                     Log.d(APP_NAME, "Начинаю отправку данных на сервер");
-                    String data = prepareTextRequest();
+                    List<PlaceType> placesTypes = dbHelper.getPlacesTypesSorted();
+                    List<Place> places = getAllPlaces(placesTypes);
+                    Set<Image> imagesData = createImagesData(places);
+
+                    String textRequest = prepareTextRequest(placesTypes, places);
                     InteractStatus networkStatus = InteractStatus.CLIENT_ERROR;
-                    if (data != null) {
-                        networkStatus = sendData(data);
+                    if (textRequest != null) {
+                        networkStatus = httpClientPlaces.sendJSON(textRequest);
+                        if (networkStatus == InteractStatus.SUCCESS) {
+                            String imagesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.IMAGES_PART;
+                            try (HttpClient httpClientImages = new HttpClient(serverUrl + imagesUrlParts)) {
+
+                                for (Image image : imagesData) {
+                                    Uri imageUri = Uri.parse(image.getUrl());
+                                    DataPackage dataPackage;
+                                    try (InputStream inputStream = contentResolver.openInputStream(imageUri)) {
+                                        dataPackage = new DataPackage(inputStream);
+                                    }
+                                    dataPackage.addHeader(IMAGE_GUID, image.getGuid());
+                                    networkStatus = httpClientImages.sendBinaryData(dataPackage);
+                                    int count = 0;
+                                    while (networkStatus == InteractStatus.CORRUPT_DATA && count++ < 3) {
+                                        networkStatus = httpClientImages.sendBinaryData(dataPackage);
+                                    }
+                                    if (networkStatus != InteractStatus.SUCCESS) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
-                    NotificationsHelper.sendPublicNotify(networkStatus, getApplicationContext(), "Результат публикации справочников");
+                    NotificationsHelper.sendPublicNotify(networkStatus,
+                            getApplicationContext(), "Результат публикации справочников");
                 } catch (Exception ex) {
                     Log.e(APP_NAME, ex.toString(), ex);
                 } finally {
+                    IOUtils.closeQuietly(httpClientPlaces);
                     stopSelf();
                 }
 
@@ -80,19 +119,14 @@ public class PublicationService extends Service {
     }
 
 
-
     @Nullable
-    private String prepareTextRequest() {
+    private String prepareTextRequest(List<PlaceType> placesTypes, List<Place> places) {
         try {
             JSONObject requestJSON = new JSONObject();
-            List<PlaceType> placesTypes = dbHelper.getPlacesTypesSorted();
             JSONArray placeTypesJsonArray = createPlaceTypes(placesTypes);
-            List<Place> places = getAllPlaces(placesTypes);
             JSONArray placesJsonArray = createPlaces(places);
             requestJSON.put(Place.TABLE_NAME, placesJsonArray);
             requestJSON.put(PlaceType.TABLE_NAME, placeTypesJsonArray);
-            JSONArray imagesData = createImagesData(places);
-            requestJSON.put(Image.TABLE_NAME, imagesData);
             requestJSON.put(DbHelper.DATABASE_ID, dbHelper.getSettingByName(DbHelper.DATABASE_ID));
             return requestJSON.toString();
         } catch (Exception e) {
@@ -102,20 +136,13 @@ public class PublicationService extends Service {
     }
 
     @NonNull
-    private JSONArray createImagesData(List<Place> places) throws PersistenceException, IOException, JSONException {
-        JSONArray jsonArray = new JSONArray();
-        Set<Integer> imageIds = new HashSet<>();
+    private Set<Image> createImagesData(List<Place> places) throws PersistenceException, IOException, JSONException {
+        Set<Image> images = new HashSet<>();
         for (Place place : places) {
-            List<Integer> imagesIdsInt = place.getImagesIds();
-            imageIds.addAll(imagesIdsInt);
+            List<Image> imagesIdsInt = place.getImages();
+            images.addAll(imagesIdsInt);
         }
-        List<Image> allImages = dbHelper.getImageData(imageIds);
-        ContentResolver contentResolver = getContentResolver();
-        for (Image image : allImages) {
-            JSONObject imageObject = image.toJsonObject(contentResolver);
-            jsonArray.put(imageObject);
-        }
-        return jsonArray;
+        return images;
     }
 
 
@@ -123,7 +150,7 @@ public class PublicationService extends Service {
     private JSONArray createPlaces(List<Place> places) throws PersistenceException,
             FileNotFoundException, JSONException {
         JSONArray jsonArray = new JSONArray();
-        Map<Integer, String> countries = dbHelper.getCountries();
+        Map<Integer, String> countries = dbHelper.getCountriesSorted();
         for (Place place : places) {
             JSONObject jsonObject = place.toJsonObject(countries, getApplicationContext());
             jsonArray.put(jsonObject);
@@ -155,34 +182,5 @@ public class PublicationService extends Service {
         return jsonArray;
     }
 
-    private InteractStatus sendData(String data) {
-        try {
-            String serviceUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
-            URL url = new URL(serviceUrl + Commons.URL_REFERENCES + SEND_COMMAND + Commons.PLACES_DATA_URL_PART);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(250000);
-            conn.setConnectTimeout(25000);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("User-Agent", "Android(" + APP_NAME + ")");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("charset", "utf-8");
-            conn.setDoOutput(true);
-            Log.d(APP_NAME, "Отправляю запрос на сервер: " + data);
-            OutputStream outputStream = conn.getOutputStream();
-            outputStream.write(data.getBytes("utf-8"));
-            outputStream.flush();
-            int responseCode = conn.getResponseCode();
-            Log.d(APP_NAME, "Http код ответа: " + responseCode);
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                return InteractStatus.SUCCESS;
-            } else if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                return InteractStatus.CLIENT_ERROR;
-            } else {
-                return InteractStatus.SERVER_ERROR;
-            }
-        } catch (Exception e) {
-            Log.e(APP_NAME, e.toString(), e);
-            return InteractStatus.UNKNOWN;
-        }
-    }
+
 }

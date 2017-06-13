@@ -9,12 +9,16 @@ import android.support.annotation.StringRes;
 import android.util.Base64;
 import android.util.Log;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -92,14 +96,24 @@ public class Commons {
         for (Map.Entry<String, byte[]> entry : imagesDataMap.entrySet()) {
             String guid = entry.getKey();
             File tempFile = File.createTempFile("picture" + guid, ".png", imagesDir);
-            try (OutputStream outputStream = new FileOutputStream(tempFile)) {
-                byte[] binary = entry.getValue();
-                outputStream.write(binary);
-            }
+            IOUtils.write(entry.getValue(), new FileOutputStream(tempFile));
             Uri uri = Uri.fromFile(tempFile);
             guidesAndUrls.put(guid, uri.toString());
         }
         return guidesAndUrls;
+    }
+
+    @NonNull
+    public static String readStreamToString(InputStream inputStream, String charset) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(inputStream, charset))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+        }
+        return stringBuilder.toString();
     }
 
     public static boolean stringsAreBlank(String... strings) {

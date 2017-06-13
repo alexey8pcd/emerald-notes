@@ -9,5 +9,5 @@ public enum InteractStatus {
     DB_ERROR,
     CLIENT_ERROR,
     SERVER_ERROR,
-    UNKNOWN
+    CORRUPT_DATA, UNKNOWN
 }
