@@ -1,4 +1,4 @@
-package ru.alexey_ovcharov.webserver.persist;
+package ru.alexey_ovcharov.webserver.logic.facades.util;
 
 import java.util.List;
 import javax.faces.application.FacesMessage;

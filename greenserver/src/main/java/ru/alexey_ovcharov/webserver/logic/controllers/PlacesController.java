@@ -1,11 +1,14 @@
-package ru.alexey_ovcharov.webserver.persist;
+package ru.alexey_ovcharov.webserver.logic.controllers;
 
-import ru.alexey_ovcharov.webserver.persist.JsfUtil;
-import ru.alexey_ovcharov.webserver.persist.JsfUtil.PersistAction;
+import ru.alexey_ovcharov.webserver.logic.facades.PlacesFacade;
+import ru.alexey_ovcharov.webserver.common.util.JsfUtil.PersistAction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,30 +16,50 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
+import ru.alexey_ovcharov.webserver.common.util.JsfUtil;
+import ru.alexey_ovcharov.webserver.persist.Images;
+import ru.alexey_ovcharov.webserver.persist.ImagesForPlace;
+import ru.alexey_ovcharov.webserver.persist.Places;
 
-@Named("placeTypesController")
+@Named("placesController")
 @SessionScoped
-public class PlaceTypesController implements Serializable {
+public class PlacesController implements Serializable {
 
     @EJB
-    private ru.alexey_ovcharov.webserver.persist.PlaceTypesFacade ejbFacade;
-    private List<PlaceTypes> items = null;
-    private PlaceTypes selected;
+    private ru.alexey_ovcharov.webserver.logic.facades.PlacesFacade ejbFacade;
+    private List<Places> items = null;
+    private Map<Places, Images> firstImagesForPlaces = new HashMap<>();
+    private Places selected;
+    private UploadedFile file;
 
-    public PlaceTypesController() {
+    public UploadedFile getFile() {
+        return file;
+    }
+    /*
+    ImagesForPlace imagesForPlace = imagesForPlaceCollection.iterator().next();
+        Images images = imagesForPlace.getIdImage();
+        byte[] imageData = images.getImageData();
+        return new ByteArrayContent(imageData);
+    */
+
+    public void setFile(UploadedFile file) {
+        this.file = file;
     }
 
-    public PlaceTypes getSelected() {
+    public PlacesController() {
+    }
+
+    public Places getSelected() {
         return selected;
     }
 
-    public void setSelected(PlaceTypes selected) {
+    public void setSelected(Places selected) {
         this.selected = selected;
     }
 
@@ -46,40 +69,56 @@ public class PlaceTypesController implements Serializable {
     protected void initializeEmbeddableKey() {
     }
 
-    private PlaceTypesFacade getFacade() {
+    private PlacesFacade getFacade() {
         return ejbFacade;
     }
 
-    public PlaceTypes prepareCreate() {
-        selected = new PlaceTypes();
+    public Places prepareCreate() {
+        selected = new Places();
         initializeEmbeddableKey();
         return selected;
     }
 
     public void create() {
-        persist(PersistAction.CREATE, ResourceBundle.getBundle("/Bundle").getString("PlaceTypesCreated"));
+        persist(PersistAction.CREATE, ResourceBundle.getBundle("/Bundle").getString("PlacesCreated"));
         if (!JsfUtil.isValidationFailed()) {
             items = null;    // Invalidate list of items to trigger re-query.
         }
     }
 
     public void update() {
-        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("PlaceTypesUpdated"));
+        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("PlacesUpdated"));
     }
 
     public void destroy() {
-        persist(PersistAction.DELETE, ResourceBundle.getBundle("/Bundle").getString("PlaceTypesDeleted"));
+        persist(PersistAction.DELETE, ResourceBundle.getBundle("/Bundle").getString("PlacesDeleted"));
         if (!JsfUtil.isValidationFailed()) {
             selected = null; // Remove selection
             items = null;    // Invalidate list of items to trigger re-query.
         }
     }
 
-    public List<PlaceTypes> getItems() {
+    public List<Places> getItems() {
         if (items == null) {
             items = getFacade().findAll();
         }
+        if (items != null){
+            for (Places item : items) {
+                Collection<ImagesForPlace> collection = item.getImagesForPlaceCollection();
+                if(collection != null){
+                    for (ImagesForPlace imagesForPlace : collection) {
+                        Images idImage = imagesForPlace.getIdImage();
+                        firstImagesForPlaces.put(item, idImage);
+                        break;
+                    }
+                }
+            }
+        }
         return items;
+    }
+
+    public Map<Places, Images> getFirstImagesForPlaces() {
+        return firstImagesForPlaces;
     }
 
     private void persist(PersistAction persistAction, String successMessage) {
@@ -87,7 +126,11 @@ public class PlaceTypesController implements Serializable {
             setEmbeddableKeys();
             try {
                 if (persistAction != PersistAction.DELETE) {
+                    if (file != null) {
+                        System.out.println(file);
+                    }
                     getFacade().edit(selected);
+
                 } else {
                     getFacade().remove(selected);
                 }
@@ -110,38 +153,29 @@ public class PlaceTypesController implements Serializable {
         }
     }
 
-    public PlaceTypes getPlaceTypes(java.lang.Integer id) {
+    public Places getPlaces(java.lang.Integer id) {
         return getFacade().find(id);
     }
 
-    public List<PlaceTypes> getItemsAvailableSelectMany() {
+    public List<Places> getItemsAvailableSelectMany() {
         return getFacade().findAll();
     }
 
-    public List<PlaceTypes> getItemsAvailableSelectOne() {
+    public List<Places> getItemsAvailableSelectOne() {
         return getFacade().findAll();
     }
 
-    public List<String> getTypesAsString() {
-        List<PlaceTypes> placeTypeses = getFacade().findAll();
-        List<String> list = new ArrayList<>(placeTypeses.size());
-        for (PlaceTypes placeTypese : placeTypeses) {
-            list.add(placeTypese.getType());
-        }
-        return list;
-    }
-
-    @FacesConverter(forClass = PlaceTypes.class)
-    public static class PlaceTypesControllerConverter implements Converter {
+    @FacesConverter(forClass = Places.class)
+    public static class PlacesControllerConverter implements Converter {
 
         @Override
         public Object getAsObject(FacesContext facesContext, UIComponent component, String value) {
             if (value == null || value.length() == 0) {
                 return null;
             }
-            PlaceTypesController controller = (PlaceTypesController) facesContext.getApplication().getELResolver().
-                    getValue(facesContext.getELContext(), null, "placeTypesController");
-            return controller.getPlaceTypes(getKey(value));
+            PlacesController controller = (PlacesController) facesContext.getApplication().getELResolver().
+                    getValue(facesContext.getELContext(), null, "placesController");
+            return controller.getPlaces(getKey(value));
         }
 
         java.lang.Integer getKey(String value) {
@@ -161,11 +195,11 @@ public class PlaceTypesController implements Serializable {
             if (object == null) {
                 return null;
             }
-            if (object instanceof PlaceTypes) {
-                PlaceTypes o = (PlaceTypes) object;
-                return getStringKey(o.getIdPlaceType());
+            if (object instanceof Places) {
+                Places o = (Places) object;
+                return getStringKey(o.getIdPlace());
             } else {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "object {0} is of type {1}; expected type: {2}", new Object[]{object, object.getClass().getName(), PlaceTypes.class.getName()});
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "object {0} is of type {1}; expected type: {2}", new Object[]{object, object.getClass().getName(), Places.class.getName()});
                 return null;
             }
         }

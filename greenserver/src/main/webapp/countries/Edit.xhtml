@@ -8,16 +8,38 @@
 
     <ui:composition>
 
-        <p:dialog id="CountriesEditDlg" widgetVar="CountriesEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditCountriesTitle}">
+        <p:dialog id="CountriesEditDlg" widgetVar="CountriesEditDialog" 
+                  modal="true" resizable="false" 
+                  appendTo="@(body)" header="#{bundle.EditCountriesTitle}">
+            
             <h:form id="CountriesEditForm">
                 <h:panelGroup id="display">
-                    <p:panelGrid columns="2" rendered="#{countriesController.selected != null}">
-                        <p:outputLabel value="#{bundle.EditCountriesLabel_idCountry}" for="idCountry" />
-                        <p:inputText id="idCountry" value="#{countriesController.selected.idCountry}" title="#{bundle.EditCountriesTitle_idCountry}" required="true" requiredMessage="#{bundle.EditCountriesRequiredMessage_idCountry}"/>
-                        <p:outputLabel value="#{bundle.EditCountriesLabel_country}" for="country" />
-                        <p:inputText id="country" value="#{countriesController.selected.country}" title="#{bundle.EditCountriesTitle_country}" required="true" requiredMessage="#{bundle.EditCountriesRequiredMessage_country}"/>
+                    <p:panelGrid columns="2" 
+                                 rendered="#{countriesController.selected != null}">
+                        
+                        <p:outputLabel value="#{bundle.EditCountriesLabel_idCountry}" 
+                                       for="idCountry" />
+                        
+                        <p:inputText id="idCountry" 
+                                     value="#{countriesController.selected.idCountry}" 
+                                     title="#{bundle.EditCountriesTitle_idCountry}" 
+                                     required="true" 
+                                     requiredMessage="#{bundle.EditCountriesRequiredMessage_idCountry}"/>
+                        
+                        <p:outputLabel value="#{bundle.EditCountriesLabel_country}" 
+                                       for="country" />
+                        
+                        <p:inputText id="country" 
+                                     value="#{countriesController.selected.country}" 
+                                     title="#{bundle.EditCountriesTitle_country}" 
+                                     required="true" 
+                                     requiredMessage="#{bundle.EditCountriesRequiredMessage_country}"/>
                     </p:panelGrid>
-                    <p:commandButton actionListener="#{countriesController.update}" value="#{bundle.Save}" update="display,:CountriesListForm:datalist,:growl" oncomplete="handleSubmit(args, 'CountriesEditDialog');"/>
+                    <p:commandButton actionListener="#{countriesController.update}" 
+                                     value="#{bundle.Save}" 
+                                     update="display,:CountriesListForm:datalist,:growl" 
+                                     oncomplete="handleSubmit(args, 'CountriesEditDialog');"/>
+                    
                     <p:commandButton value="#{bundle.Cancel}" onclick="CountriesEditDialog.hide()"/>
                 </h:panelGroup>
             </h:form>

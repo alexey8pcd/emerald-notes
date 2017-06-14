@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.primefaces.model.ByteArrayContent;
+import org.primefaces.model.StreamedContent;
 import ru.alexey_ovcharov.webserver.common.util.Constants;
 import ru.alexey_ovcharov.webserver.common.util.LangUtil;
 import ru.alexey_ovcharov.webserver.common.util.Nullable;
@@ -211,7 +213,7 @@ public class Places implements Serializable {
     public void setIdPlaceType(PlaceTypes idPlaceType) {
         this.idPlaceType = idPlaceType;
     }
-
+    
     @Override
     public int hashCode() {
         int hash = 0;

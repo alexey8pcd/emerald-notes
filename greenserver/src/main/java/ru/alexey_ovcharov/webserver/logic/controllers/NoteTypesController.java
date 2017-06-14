@@ -1,7 +1,8 @@
-package ru.alexey_ovcharov.webserver.persist;
+package ru.alexey_ovcharov.webserver.logic.controllers;
 
-import ru.alexey_ovcharov.webserver.persist.JsfUtil;
-import ru.alexey_ovcharov.webserver.persist.JsfUtil.PersistAction;
+import ru.alexey_ovcharov.webserver.logic.facades.NoteTypesFacade;
+import ru.alexey_ovcharov.webserver.common.util.JsfUtil;
+import ru.alexey_ovcharov.webserver.common.util.JsfUtil.PersistAction;
 
 import java.io.Serializable;
 import java.util.List;
@@ -12,39 +13,30 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
-import org.primefaces.model.UploadedFile;
+import ru.alexey_ovcharov.webserver.common.util.JsfUtil;
+import ru.alexey_ovcharov.webserver.persist.NoteTypes;
 
-@Named("placesController")
+@Named("noteTypesController")
 @SessionScoped
-public class PlacesController implements Serializable {
+public class NoteTypesController implements Serializable {
 
     @EJB
-    private ru.alexey_ovcharov.webserver.persist.PlacesFacade ejbFacade;
-    private List<Places> items = null;
-    private Places selected;
-    private UploadedFile file;
+    private ru.alexey_ovcharov.webserver.logic.facades.NoteTypesFacade ejbFacade;
+    private List<NoteTypes> items = null;
+    private NoteTypes selected;
 
-    public UploadedFile getFile() {
-        return file;
+    public NoteTypesController() {
     }
 
-    public void setFile(UploadedFile file) {
-        this.file = file;
-    }
-
-    public PlacesController() {
-    }
-
-    public Places getSelected() {
+    public NoteTypes getSelected() {
         return selected;
     }
 
-    public void setSelected(Places selected) {
+    public void setSelected(NoteTypes selected) {
         this.selected = selected;
     }
 
@@ -54,36 +46,36 @@ public class PlacesController implements Serializable {
     protected void initializeEmbeddableKey() {
     }
 
-    private PlacesFacade getFacade() {
+    private NoteTypesFacade getFacade() {
         return ejbFacade;
     }
 
-    public Places prepareCreate() {
-        selected = new Places();
+    public NoteTypes prepareCreate() {
+        selected = new NoteTypes();
         initializeEmbeddableKey();
         return selected;
     }
 
     public void create() {
-        persist(PersistAction.CREATE, ResourceBundle.getBundle("/Bundle").getString("PlacesCreated"));
+        persist(PersistAction.CREATE, ResourceBundle.getBundle("/Bundle").getString("NoteTypesCreated"));
         if (!JsfUtil.isValidationFailed()) {
             items = null;    // Invalidate list of items to trigger re-query.
         }
     }
 
     public void update() {
-        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("PlacesUpdated"));
+        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("NoteTypesUpdated"));
     }
 
     public void destroy() {
-        persist(PersistAction.DELETE, ResourceBundle.getBundle("/Bundle").getString("PlacesDeleted"));
+        persist(PersistAction.DELETE, ResourceBundle.getBundle("/Bundle").getString("NoteTypesDeleted"));
         if (!JsfUtil.isValidationFailed()) {
             selected = null; // Remove selection
             items = null;    // Invalidate list of items to trigger re-query.
         }
     }
 
-    public List<Places> getItems() {
+    public List<NoteTypes> getItems() {
         if (items == null) {
             items = getFacade().findAll();
         }
@@ -95,11 +87,7 @@ public class PlacesController implements Serializable {
             setEmbeddableKeys();
             try {
                 if (persistAction != PersistAction.DELETE) {
-                    if (file != null) {
-                        System.out.println(file);
-                    }
                     getFacade().edit(selected);
-
                 } else {
                     getFacade().remove(selected);
                 }
@@ -122,29 +110,29 @@ public class PlacesController implements Serializable {
         }
     }
 
-    public Places getPlaces(java.lang.Integer id) {
+    public NoteTypes getNoteTypes(java.lang.Integer id) {
         return getFacade().find(id);
     }
 
-    public List<Places> getItemsAvailableSelectMany() {
+    public List<NoteTypes> getItemsAvailableSelectMany() {
         return getFacade().findAll();
     }
 
-    public List<Places> getItemsAvailableSelectOne() {
+    public List<NoteTypes> getItemsAvailableSelectOne() {
         return getFacade().findAll();
     }
 
-    @FacesConverter(forClass = Places.class)
-    public static class PlacesControllerConverter implements Converter {
+    @FacesConverter(forClass = NoteTypes.class)
+    public static class NoteTypesControllerConverter implements Converter {
 
         @Override
         public Object getAsObject(FacesContext facesContext, UIComponent component, String value) {
             if (value == null || value.length() == 0) {
                 return null;
             }
-            PlacesController controller = (PlacesController) facesContext.getApplication().getELResolver().
-                    getValue(facesContext.getELContext(), null, "placesController");
-            return controller.getPlaces(getKey(value));
+            NoteTypesController controller = (NoteTypesController) facesContext.getApplication().getELResolver().
+                    getValue(facesContext.getELContext(), null, "noteTypesController");
+            return controller.getNoteTypes(getKey(value));
         }
 
         java.lang.Integer getKey(String value) {
@@ -164,11 +152,11 @@ public class PlacesController implements Serializable {
             if (object == null) {
                 return null;
             }
-            if (object instanceof Places) {
-                Places o = (Places) object;
-                return getStringKey(o.getIdPlace());
+            if (object instanceof NoteTypes) {
+                NoteTypes o = (NoteTypes) object;
+                return getStringKey(o.getIdNoteType());
             } else {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "object {0} is of type {1}; expected type: {2}", new Object[]{object, object.getClass().getName(), Places.class.getName()});
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "object {0} is of type {1}; expected type: {2}", new Object[]{object, object.getClass().getName(), NoteTypes.class.getName()});
                 return null;
             }
         }
