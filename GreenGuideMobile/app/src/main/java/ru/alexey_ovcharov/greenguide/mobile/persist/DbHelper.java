@@ -654,7 +654,7 @@ public class DbHelper extends SQLiteOpenHelper {
                             if (cursorImg.moveToFirst()) {
                                 do {
                                     thing.addImage(new Image(cursorImg));
-                                } while (cursor.moveToNext());
+                                } while (cursorImg.moveToNext());
                             }
                         }
                         result.add(thing);
