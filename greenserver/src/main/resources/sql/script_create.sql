@@ -313,6 +313,7 @@ CREATE TABLE public.users
   login character varying(40) NOT NULL,
   password character varying(40) NOT NULL,
   id_country integer NOT NULL,
+  privilege integer NOT NULL DEFAULT 0,
   CONSTRAINT users_pkey PRIMARY KEY (id_user),
   CONSTRAINT "UNIQUE_users_1" UNIQUE (login)
 )

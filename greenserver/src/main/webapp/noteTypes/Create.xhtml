@@ -8,16 +8,31 @@
 
     <ui:composition>
 
-        <p:dialog id="NoteTypesCreateDlg" widgetVar="NoteTypesCreateDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateNoteTypesTitle}">
+        <p:dialog id="NoteTypesCreateDlg" widgetVar="NoteTypesCreateDialog" 
+                  modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateNoteTypesTitle}">
             <h:form id="NoteTypesCreateForm">
                 <h:panelGroup id="display">
                     <p:panelGrid columns="2" rendered="#{noteTypesController.selected != null}">
-                        <p:outputLabel value="#{bundle.CreateNoteTypesLabel_idNoteType}" for="idNoteType" />
-                        <p:inputText id="idNoteType" value="#{noteTypesController.selected.idNoteType}" title="#{bundle.CreateNoteTypesTitle_idNoteType}" required="true" requiredMessage="#{bundle.CreateNoteTypesRequiredMessage_idNoteType}"/>
+                        <p:outputLabel value="#{bundle.CreateNoteTypesLabel_idNoteType}" 
+                                       for="idNoteType" />
+                        
+                        <p:inputText id="idNoteType" 
+                                     value="#{noteTypesController.selected.idNoteType}" 
+                                     title="#{bundle.CreateNoteTypesTitle_idNoteType}" 
+                                     required="false" 
+                                     requiredMessage="#{bundle.CreateNoteTypesRequiredMessage_idNoteType}"/>
+                        
                         <p:outputLabel value="#{bundle.CreateNoteTypesLabel_noteType}" for="noteType" />
-                        <p:inputText id="noteType" value="#{noteTypesController.selected.noteType}" title="#{bundle.CreateNoteTypesTitle_noteType}" required="true" requiredMessage="#{bundle.CreateNoteTypesRequiredMessage_noteType}"/>
+                        <p:inputText id="noteType" 
+                                     value="#{noteTypesController.selected.noteType}" 
+                                     title="#{bundle.CreateNoteTypesTitle_noteType}" 
+                                     required="true" 
+                                     requiredMessage="#{bundle.CreateNoteTypesRequiredMessage_noteType}"/>
                     </p:panelGrid>
-                    <p:commandButton actionListener="#{noteTypesController.create}" value="#{bundle.Save}" update="display,:NoteTypesListForm:datalist,:growl" oncomplete="handleSubmit(args,'NoteTypesCreateDialog');"/>
+                    <p:commandButton actionListener="#{noteTypesController.create}" 
+                                     value="#{bundle.Save}" 
+                                     update="display,:NoteTypesListForm:datalist,:growl" 
+                                     oncomplete="handleSubmit(args,'NoteTypesCreateDialog');"/>
                     <p:commandButton value="#{bundle.Cancel}" onclick="NoteTypesCreateDialog.hide()"/>
                 </h:panelGroup>
             </h:form>

@@ -57,7 +57,18 @@ public class Users implements Serializable {
     private Collection<Messages> messagesCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "idUserTo", fetch = FetchType.LAZY)
     private Collection<Messages> messagesCollection1;
+    @Column(name = "privilege")
+    private int privilege;
 
+    public int getPrivilege() {
+        return privilege;
+    }
+
+    public void setPrivilege(int privilege) {
+        this.privilege = privilege;
+    }
+
+    
     public Users() {
     }
 

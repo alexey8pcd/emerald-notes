@@ -21,10 +21,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
-@author Alexey
-*/
+ * @author Alexey
+ */
 @Entity
 @Table(name = "things")
 @XmlRootElement
@@ -72,6 +74,17 @@ public class Things implements Serializable {
     @NotNull
     private UUID guid;
 
+    public Things(JSONObject thingsInfoJSON) throws JSONException {
+        name = thingsInfoJSON.getString("name");
+        description = thingsInfoJSON.getString("description");
+        idDangerForEnvironment = thingsInfoJSON.getInt("danger_for_environment");
+        if (thingsInfoJSON.has("decomposition_time")) {
+            decompositionTime = thingsInfoJSON.getInt("decomposition_time");
+        }
+        String guidString = thingsInfoJSON.getString("guid");
+        this.guid = UUID.fromString(guidString);
+    }
+
     public UUID getGuid() {
         return guid;
     }
@@ -79,7 +92,7 @@ public class Things implements Serializable {
     public void setGuid(UUID guid) {
         this.guid = guid;
     }
-    
+
     public Things() {
     }
 

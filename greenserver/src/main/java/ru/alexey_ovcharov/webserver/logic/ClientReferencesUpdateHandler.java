@@ -33,11 +33,15 @@ public class ClientReferencesUpdateHandler {
     @PersistenceContext(unitName = "ru.alexey_ovcharov_webserver_war_1.0PU")
     private EntityManager entityManager;
 
-    public String getThingsJSON() {
+    public String getCountriesJSON () {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    public String getThingsJSON(int offset, int limit, String criteria) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public String getNotesJSON() {
+    public String getNotesJSON(int offset, int limit, String criteria) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

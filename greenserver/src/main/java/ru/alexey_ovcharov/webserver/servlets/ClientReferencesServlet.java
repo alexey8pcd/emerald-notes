@@ -1,7 +1,6 @@
 package ru.alexey_ovcharov.webserver.servlets;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -45,6 +44,8 @@ public class ClientReferencesServlet extends HttpServlet {
     private static final String CRC_32 = "crc32";
     private static final String IMAGE_GUID = "image-guid";
     private static final String CRITERIA = "criteria";
+    private static final String OFFSET = "offset";
+    private static final String LIMIT = "limit";
 
     @Override
     protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
@@ -115,12 +116,12 @@ public class ClientReferencesServlet extends HttpServlet {
         int indexOf = requestURI.lastIndexOf("/");
         String offsetParam = ServletUtils.getFirstParameter(parametersMap, OFFSET);
         int offset = NumberUtils.toInt(offsetParam, 0);
-        
+
         String limitParam = ServletUtils.getFirstParameter(parametersMap, LIMIT);
         int limit = NumberUtils.toInt(limitParam, Integer.MAX_VALUE);
-        
+
         String criteriaParam = ServletUtils.getFirstParameter(parametersMap, CRITERIA);
-        
+
         String command = requestURI.substring(indexOf);
         String response;
         switch (command) {
@@ -129,7 +130,7 @@ public class ClientReferencesServlet extends HttpServlet {
                 response = updateHandler.getPlacesJSON(offset, limit, criteriaParam);
                 break;
             case THINGS_DATA:
-                response = updateHandler.getThingsJSON();
+                response = updateHandler.getThingsJSON(offset, limit, criteriaParam);
                 break;
             case IMAGES_DATA:
                 response = updateHandler.getImagesJSON(parametersMap.get(GUID_PARAM));
@@ -141,8 +142,7 @@ public class ClientReferencesServlet extends HttpServlet {
         httpServletResponse.setContentType("application/json;charset=UTF-8");
         httpServletResponse.getWriter().write(response);
     }
-    private static final String OFFSET = "offset";
-    private static final String LIMIT = "limit";
+    
 
     private void saveData(HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse) throws Exception {
@@ -153,54 +153,66 @@ public class ClientReferencesServlet extends HttpServlet {
         String command = requestURI.substring(indexOf + SEND_TYPE.length());
         String imageGuid = httpServletRequest.getHeader(IMAGE_GUID);
         if (IMAGES_DATA.equals(command) && StringUtils.isNotBlank(imageGuid) && checkUUID(imageGuid)) {
-            logger.info("Получил запрос на сохранение изображения");
-            String imageSize = httpServletRequest.getHeader(DATA_SIZE);
-            int size = Integer.parseInt(imageSize);
-            String imageCrc = httpServletRequest.getHeader(CRC_32);
-            long inputImageChecksum = Long.parseLong(imageCrc);
-            byte[] imageData = IOUtils.toByteArray(httpServletRequest.getInputStream());
-            if (imageData.length == size) {
-                CRC32 crC32 = new CRC32();
-                crC32.update(imageData);
-                long calculatedChecksum = crC32.getValue();
-                if (calculatedChecksum == inputImageChecksum) {
-                    receiveHandler.saveImage(imageData, imageGuid);
-                } else {
-                    httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, 
-                            "Data length invalid");
-                    return;
-                }
+            saveImages(httpServletRequest, imageGuid, httpServletResponse);
+        } else {
+            saveReferences(httpServletRequest, characterEncoding, 
+                    command, httpServletResponse);
+        }
+
+    }
+
+    private void saveReferences(HttpServletRequest httpServletRequest, 
+            String characterEncoding, String command, 
+            HttpServletResponse httpServletResponse) throws Exception {
+        String request = getResponseBody(httpServletRequest, characterEncoding);
+        logger.info("Тело запроса: " + request);
+        JSONObject jSONObject = new JSONObject();
+        if (StringUtils.isNotBlank(request) && request.startsWith("{")) {
+            jSONObject = new JSONObject(request);
+        }
+        switch (command) {
+            case PLACES_DATA:
+                logger.info("Получил запрос на сохранение мест");
+                receiveHandler.savePlaces(jSONObject);
+                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                break;
+            case THINGS_DATA:
+                logger.info("Получил запрос на сохранение объектов энциклопедии");
+                receiveHandler.saveThings(jSONObject);
+                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                break;
+            default:
+                httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private void saveImages(HttpServletRequest httpServletRequest,
+            String imageGuid, HttpServletResponse httpServletResponse) throws Exception {
+        logger.info("Получил запрос на сохранение изображения");
+        String imageSize = httpServletRequest.getHeader(DATA_SIZE);
+        int size = Integer.parseInt(imageSize);
+        String imageCrc = httpServletRequest.getHeader(CRC_32);
+        long inputImageChecksum = Long.parseLong(imageCrc);
+        byte[] imageData = IOUtils.toByteArray(httpServletRequest.getInputStream());
+        if (imageData.length == size) {
+            CRC32 crC32 = new CRC32();
+            crC32.update(imageData);
+            long calculatedChecksum = crC32.getValue();
+            if (calculatedChecksum == inputImageChecksum) {
+                receiveHandler.saveImage(imageData, imageGuid);
+                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             } else {
-                httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, 
-                        "Checksums not equals");
-                return;
+                httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE,
+                        "Data length invalid");
             }
         } else {
-            String request = getResponseBody(httpServletRequest, characterEncoding);
-            logger.info("Тело запроса: " + request);
-            JSONObject jSONObject = new JSONObject();
-            if (StringUtils.isNotBlank(request) && request.startsWith("{")) {
-                jSONObject = new JSONObject(request);
-            }
-            switch (command) {
-                case PLACES_DATA:
-                    logger.info("Получил запрос на сохранение мест");
-                    receiveHandler.savePlaces(jSONObject);
-                    break;
-                case THINGS_DATA:
-                    logger.info("Получил запрос на сохранение вещей");
-                    receiveHandler.saveThings(jSONObject);
-                    break;
-                default:
-                    httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
-                    return;
-            }
+            httpServletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE,
+                    "Checksums not equals");
         }
-        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
-    
 
-    private String getResponseBody(HttpServletRequest httpServletRequest, String characterEncoding) throws IOException {
+    private String getResponseBody(HttpServletRequest httpServletRequest, 
+            String characterEncoding) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(httpServletRequest.getInputStream(), characterEncoding))) {

@@ -27,6 +27,14 @@ public class ThingsController implements Serializable {
     private ru.alexey_ovcharov.webserver.logic.facades.ThingsFacade ejbFacade;
     private List<Things> items = null;
     private Things selected;
+    public static final String[] DANGER_LABELS = {
+        "Нет данных",
+        "Полезно",
+        "Не опасно",
+        "Малоопасно",
+        "Умеренно опасно",
+        "Опасно",
+        "Очень опасно",};
 
     public ThingsController() {
     }
@@ -53,6 +61,30 @@ public class ThingsController implements Serializable {
         selected = new Things();
         initializeEmbeddableKey();
         return selected;
+    }
+
+    public String getDangerInfo(int idDanger) {
+        return DANGER_LABELS[idDanger];
+    }
+
+    public String getDecompositionLabel(Integer decompositionTimeMonth) {
+        String decompTimeStr = "";
+        if (decompositionTimeMonth != null) {
+            int years = decompositionTimeMonth / 12;
+            int month = decompositionTimeMonth % 12;
+            if (years != 0) {
+                decompTimeStr += "Лет: " + years;
+            }
+            if (month != 0) {
+                if (years != 0) {
+                    decompTimeStr += ", ";
+                }
+                decompTimeStr += "Месяцев: " + month;
+            }
+        } else {
+            decompTimeStr = "Нет данных";
+        }
+        return decompTimeStr;
     }
 
     public void create() {

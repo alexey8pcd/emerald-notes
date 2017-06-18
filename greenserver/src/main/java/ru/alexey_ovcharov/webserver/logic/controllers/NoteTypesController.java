@@ -7,6 +7,7 @@ import ru.alexey_ovcharov.webserver.common.util.JsfUtil.PersistAction;
 import java.io.Serializable;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -87,6 +88,9 @@ public class NoteTypesController implements Serializable {
             setEmbeddableKeys();
             try {
                 if (persistAction != PersistAction.DELETE) {
+                    if (selected.getGuid() == null) {
+                        selected.setGuid(UUID.randomUUID());
+                    }
                     getFacade().edit(selected);
                 } else {
                     getFacade().remove(selected);
