@@ -53,8 +53,8 @@ public class AddThingActivity extends Activity {
     private EditText etDecomposition;
     private SeekBar sbDanger;
     private Uri tempImageUri;
-    private Image image;
     private ImageView imageView;
+    private String selectedImageURI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,16 +140,15 @@ public class AddThingActivity extends Activity {
                 if (requestCode == PICK_IMAGE_REQUEST) {
                     if (data != null) {
                         Uri imageUrl = data.getData();
-                        Log.d(APP_NAME, "Выбрано изображение на устройстве: " + imageUrl);
-                        String selectedImageURI = imageUrl.toString();
-                        image = dbHelper.addImage(selectedImageURI);
+                        selectedImageURI = imageUrl.toString();
+                        Log.d(APP_NAME, "Выбрано изображение на устройстве: "
+                                + selectedImageURI);
                         imageView.setImageURI(imageUrl);
                     }
                 } else if (requestCode == CAMERA_REQUEST) {
                     if (tempImageUri != null) {
-                        String imageUrl = tempImageUri.toString();
-                        Log.d(APP_NAME, "Сделан снимок с камеры: " + imageUrl);
-                        image = dbHelper.addImage(imageUrl);
+                        selectedImageURI = tempImageUri.toString();
+                        Log.d(APP_NAME, "Сделан снимок с камеры: " + selectedImageURI);
                         imageView.setImageURI(tempImageUri);
                     }
                 }
@@ -165,35 +164,43 @@ public class AddThingActivity extends Activity {
         try {
             String name = etName.getText().toString();
             String description = etDesc.getText().toString();
-            if (image != null && StringUtils.isNoneBlank(name, description)) {
-                Thing thing = new Thing();
-                thing.setName(name);
-                thing.setDescription(description);
-                thing.setIdCategory(idCategory);
-                thing.setImage(image);
+            if (StringUtils.isNotBlank(selectedImageURI)) {
+                if (StringUtils.isNoneBlank(name, description)) {
+                    Thing thing = new Thing();
+                    thing.setName(name);
+                    thing.setDescription(description);
+                    thing.setIdCategory(idCategory);
 
-                int selectedCountry = spCountries.getSelectedItemPosition();
-                Integer idCountry = null;
-                if (selectedCountry >= 0 && selectedCountry < countries.size()) {
-                    if (selectedCountry > 0) {
-                        String country = countries.get(selectedCountry);
-                        idCountry = getCountryByName(country);
+                    int selectedCountry = spCountries.getSelectedItemPosition();
+                    Integer idCountry = null;
+                    if (selectedCountry >= 0 && selectedCountry < countries.size()) {
+                        if (selectedCountry > 0) {
+                            String country = countries.get(selectedCountry);
+                            idCountry = getCountryByName(country);
+                        }
                     }
+                    thing.setIdCountry(idCountry);
+
+                    Editable text = etDecomposition.getText();
+                    Integer decompositionTime = null;
+                    if (StringUtils.isNotBlank(text)) {
+                        decompositionTime = NumberUtils.createInteger(text.toString());
+                    }
+
+                    thing.setDecompositionTime(decompositionTime);
+                    int dangerForEnv = sbDanger.getProgress();
+                    thing.setDangerForEnvironment(dangerForEnv);
+
+                    Image image = dbHelper.addImage(selectedImageURI);
+                    thing.addImage(image);
+                    dbHelper.addThing(thing);
+                    setResult(Activity.RESULT_OK);
+                } else {
+                    Toast.makeText(this, "Название и описание должно быть указано",
+                            Toast.LENGTH_SHORT).show();
                 }
-                thing.setIdCountry(idCountry);
-
-                Editable text = etDecomposition.getText();
-                Integer decompositionTime = null;
-                if (StringUtils.isNotBlank(text)) {
-                    decompositionTime = NumberUtils.createInteger(text.toString());
-                }
-
-                thing.setDecompositionTime(decompositionTime);
-                int dangerForEnv = sbDanger.getProgress();
-                thing.setDangerForEnvironment(dangerForEnv);
-
-                dbHelper.addThing(thing);
-                setResult(Activity.RESULT_OK);
+            } else {
+                Toast.makeText(this, "Изображение не выбрано", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception ex) {
             Log.e(APP_NAME, ex.toString(), ex);

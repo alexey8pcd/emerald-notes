@@ -226,7 +226,9 @@ public class PlacesActivity extends Activity {
     }
 
     private void startPublicationService() {
-        startService(new Intent(this, PublicationService.class));
+        Intent intent = new Intent(this, PublicationService.class);
+        intent.putExtra(PublicationService.TYPE, PublicationService.TYPE_PLACES);
+        startService(intent);
     }
 
 

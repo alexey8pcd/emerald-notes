@@ -7,8 +7,6 @@
     tools:context="ru.alexey_ovcharov.greenguide.mobile.activities.ShowItemsActivity">
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="295dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
@@ -19,14 +17,17 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintTop_creator="1">
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintTop_creator="1"
+        android:layout_height="495dp"
+        android:layout_width="0dp">
 
 
         <TextView
             android:id="@+id/aShowItem_tvTitle"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.12"
+            android:layout_weight="0.08"
             android:gravity="center_vertical"
             android:text="Объекты в категории"
             android:textAlignment="center"
@@ -41,7 +42,7 @@
             android:id="@+id/aShowItem_bAdd"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_weight="0.14"
+            android:layout_weight="0.08"
             android:background="@color/app_color"
             android:text="Добавить объект..." />
 
@@ -53,7 +54,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.2"
+            android:layout_weight="0.15"
             android:orientation="horizontal"
             android:weightSum="1">
 
@@ -70,9 +71,9 @@
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="0dp"
-                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_weight="0.16"
+                android:gravity="center_vertical"
                 android:text="Название"
                 android:textAlignment="center"
                 android:textSize="10sp" />
@@ -84,9 +85,9 @@
             <TextView
                 android:id="@+id/textView3"
                 android:layout_width="0dp"
-                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_weight="0.16"
+                android:gravity="center_vertical"
                 android:text="Описание"
                 android:textAlignment="center"
                 android:textSize="10sp" />
@@ -99,9 +100,9 @@
             <TextView
                 android:id="@+id/textView4"
                 android:layout_width="0dp"
-                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_weight="0.16"
+                android:gravity="center_vertical"
                 android:text="Страна-производитель"
                 android:textAlignment="center"
                 android:textSize="10sp" />
@@ -113,9 +114,9 @@
             <TextView
                 android:id="@+id/textView5"
                 android:layout_width="0dp"
-                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_weight="0.16"
+                android:gravity="center_vertical"
                 android:text="Время разложения в природе"
                 android:textAlignment="center"
                 android:textSize="10sp" />
@@ -127,10 +128,10 @@
             <TextView
                 android:id="@+id/textView7"
                 android:layout_width="0dp"
-                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_weight="0.16"
-                android:text="Опасность для окружающей среды"
+                android:gravity="center_vertical"
+                android:text="Влияние на окружающую среду"
                 android:textAlignment="center"
                 android:textSize="10sp" />
         </LinearLayout>
@@ -144,7 +145,7 @@
             android:id="@+id/aShowItems_lvItems"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.5" />
+            android:layout_weight="0.6" />
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

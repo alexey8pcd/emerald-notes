@@ -1,6 +1,20 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
+import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
 
@@ -9,7 +23,7 @@ import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NA
  */
 
 @Entity
-public class Thing {
+public class Thing extends ImagesGallery {
 
     public static final String TABLE_NAME = "things";
     public static final String ID_THING_COLUMN = "id_thing";
@@ -43,6 +57,7 @@ public class Thing {
                     Image.ID_IMAGE_COLUMN + " INTEGER NOT NULL)";
     public static final String[] DANGER_LABELS = {
             "Нет данных",
+            "Полезно",
             "Не опасно",
             "Малоопасно",
             "Умеренно опасно",
@@ -58,7 +73,6 @@ public class Thing {
     private Integer idCountry;
     private int idCategory;
     private String guid;
-    private Image image;
 
     public Thing() {
     }
@@ -72,17 +86,6 @@ public class Thing {
         idCountry = cursor.getInt(cursor.getColumnIndex(ID_COUNTRY_COLUMN));
         idCategory = cursor.getInt(cursor.getColumnIndex(ID_CATEGORY_COLUMN));
         guid = cursor.getString(cursor.getColumnIndex(GUID_COLUMN_NAME));
-    }
-
-    public Image getImage() {
-        return image;
-    }
-
-    public Thing(String name, String description, int dangerForEnvironment, Integer decompositionTimeMonth) {
-        this.name = name;
-        this.description = description;
-        this.dangerForEnvironment = dangerForEnvironment;
-        this.decompositionTime = decompositionTimeMonth;
     }
 
     public String getGuid() {
@@ -145,7 +148,35 @@ public class Thing {
         this.idCategory = idCategory;
     }
 
-    public void setImage(Image image) {
-        this.image = image;
+    @Override
+    public String toString() {
+        return "Thing{" +
+                "idThing=" + idThing +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", dangerForEnvironment=" + dangerForEnvironment +
+                ", decompositionTime=" + decompositionTime +
+                ", idCountry=" + idCountry +
+                ", idCategory=" + idCategory +
+                ", guid='" + guid + '\'' +
+                ", imagesInfo=" + imagesInfo +
+                '}';
+    }
+
+    public JSONObject toJsonObject(Map<Integer, String> countries) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(NAME_COLUMN, name);
+        jsonObject.put(DESCRIPTION_COLUMN, description);
+        jsonObject.put(Country.COUNTRY_COLUMN, countries.get(idCountry));
+        jsonObject.put(ID_CATEGORY_COLUMN, idCategory);
+        jsonObject.put(DANGER_FOR_ENVIRONMENT_COLUMN, dangerForEnvironment);
+        jsonObject.put(DECOMPOSITION_TIME_COLUMN, decompositionTime);
+        jsonObject.put(Entity.GUID_COLUMN_NAME, guid);
+        JSONArray imagesJsonArray = new JSONArray();
+        for (Image image : imagesInfo) {
+            imagesJsonArray.put(image.getGuid());
+        }
+        jsonObject.put(Image.TABLE_NAME, imagesJsonArray);
+        return jsonObject;
     }
 }

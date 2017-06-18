@@ -18,8 +18,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
-import ru.alexey_ovcharov.greenguide.mobile.services.InteractStatus;
-import ru.alexey_ovcharov.greenguide.mobile.services.Response;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 

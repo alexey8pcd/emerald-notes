@@ -45,8 +45,9 @@ public class Commons {
     public static final int OPEN_TYPE_CHOOSE_LOCATION = 1;
     public static final String SELECTED_IMAGE_URI = "selectedImageUri";
     public static final String URL_REFERENCES = "/greenserver/references";
-    public static final String PLACES_DATA_URL_PART = "/places_data";
     public static final String IMAGES_PART = "/images_data";
+    public static final String PLACES_DATA_URL_PART = "/places_data";
+    public static final String THINGS_DATA_URL_PART = "/things_data";
 
     @NonNull
     public static <T> List<String> listToStringArray(@NonNull List<T> list, @NonNull Mapper<T> mapper) {

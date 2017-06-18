@@ -28,6 +28,8 @@ import java.util.concurrent.Semaphore;
 
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.network.HttpClient;
+import ru.alexey_ovcharov.greenguide.mobile.network.InteractStatus;
+import ru.alexey_ovcharov.greenguide.mobile.network.Response;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Country;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Image;

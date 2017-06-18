@@ -48,13 +48,13 @@
                 android:layout_weight="0.05" />
 
             <Button
-                android:id="@+id/aRefer_bAddRefer"
+                android:id="@+id/aRefer_bActions"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0.32"
                 android:background="@color/app_color"
                 android:elevation="0dp"
-                android:text="Добавить раздел..."
+                android:text="Действия..."
                 android:textAllCaps="false"
                 android:textSize="14sp" />
 

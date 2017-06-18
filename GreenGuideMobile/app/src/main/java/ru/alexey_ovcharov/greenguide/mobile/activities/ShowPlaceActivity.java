@@ -202,7 +202,7 @@ public class ShowPlaceActivity extends Activity {
                         String imageUrl = tempImageUri.toString();
                         Log.d(APP_NAME, "Сделан снимок с камеры: " + imageUrl);
                         Image image = dbHelper.addImage(imageUrl);
-                        placeWithImages.addImageId(image);
+                        placeWithImages.addImage(image);
                     }
                 }
                 dbHelper.updatePlace(placeWithImages);
@@ -240,7 +240,7 @@ public class ShowPlaceActivity extends Activity {
                 if (bitmaps != null) {
                     tvPhotos.setText("Фотографии места, количество: " + bitmaps.size());
                     imagesView.setAdapter(new ImageAdapter(this, bitmaps));
-                    if (bitmaps.size() != placeWithImages.getImages().size()) {
+                    if (bitmaps.size() != placeWithImages.getImagesInfo().size()) {
                         Toast.makeText(this, "Не все изображения были открыть успешно", Toast.LENGTH_LONG).show();
                     }
 

@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.util.Log;
 
+import ru.alexey_ovcharov.greenguide.mobile.network.InteractStatus;
+
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
 /**

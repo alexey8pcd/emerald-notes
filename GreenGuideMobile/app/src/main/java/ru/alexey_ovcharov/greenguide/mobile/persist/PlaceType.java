@@ -56,8 +56,8 @@ public class PlaceType {
 
     public JSONObject toJSONObject() throws JSONException {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(PlaceType.ID_PLACE_TYPE_COLUMN, idPlaceType);
-        jsonObject.put(PlaceType.TYPE_COLUMN, type);
+        jsonObject.put(ID_PLACE_TYPE_COLUMN, idPlaceType);
+        jsonObject.put(TYPE_COLUMN, type);
         jsonObject.put(Entity.GUID_COLUMN_NAME, guid);
         return jsonObject;
     }

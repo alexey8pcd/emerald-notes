@@ -1,4 +1,4 @@
-package ru.alexey_ovcharov.greenguide.mobile.services;
+package ru.alexey_ovcharov.greenguide.mobile.network;
 
 /**
  * Created by Алексей on 05.05.2017.
@@ -9,5 +9,6 @@ public enum InteractStatus {
     DB_ERROR,
     CLIENT_ERROR,
     SERVER_ERROR,
-    CORRUPT_DATA, UNKNOWN
+    CORRUPT_DATA,
+    UNKNOWN
 }

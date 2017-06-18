@@ -59,4 +59,21 @@ public class UsefulInformationActivity extends Activity {
             Log.d(APP_NAME, "onReceivedError :" + error);
         }
     }
+
+    private void loadNotesAsync() {
+
+    }
+
+    private void loadNoteTypesAsync() {
+
+    }
+
+    private void addNote() {
+
+    }
+
+    private void addNoteType() {
+
+    }
+
 }

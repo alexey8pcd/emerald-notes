@@ -1,6 +1,10 @@
 package ru.alexey_ovcharov.greenguide.mobile.persist;
 
 import android.database.Cursor;
+import android.support.annotation.NonNull;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NAME;
 
@@ -53,4 +57,12 @@ public class CategoryOfThing {
         this.category = category;
     }
 
+    @NonNull
+    public JSONObject toJSONObject() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(ID_CATEGORY_COLUMN, idCategory);
+        jsonObject.put(CATEGORY_COLUMN, category);
+        jsonObject.put(Entity.GUID_COLUMN_NAME, guid);
+        return jsonObject;
+    }
 }

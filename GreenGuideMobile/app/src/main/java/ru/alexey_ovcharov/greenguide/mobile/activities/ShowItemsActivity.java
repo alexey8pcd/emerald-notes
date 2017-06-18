@@ -1,7 +1,9 @@
 package ru.alexey_ovcharov.greenguide.mobile.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -10,22 +12,25 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
-import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Thing;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
@@ -37,6 +42,7 @@ public class ShowItemsActivity extends Activity {
     private DbHelper dbHelper;
     private int idCategory;
     private ListView lvItems;
+    private volatile Map<Integer, String> countries = Collections.EMPTY_MAP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +64,29 @@ public class ShowItemsActivity extends Activity {
         lvItems = (ListView) findViewById(R.id.aShowItems_lvItems);
         dbHelper = DbHelper.getInstance(getApplicationContext());
         lvItems.setAdapter(new ThingArrayAdapter(this, thingList));
+        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                AlertDialog.Builder ad = new AlertDialog.Builder(ShowItemsActivity.this);
+                ad.setTitle("Удаление объекта");
+                ad.setMessage("Удалить выбранной объект?");
+                ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        int idThing = thingList.get(position).getIdThing();
+                        try {
+                            dbHelper.deleteThingById(idThing);
+                            Toast.makeText(ShowItemsActivity.this, "Удалено успещно", Toast.LENGTH_SHORT).show();
+                        } catch (Exception ex) {
+                            Log.e(APP_NAME, ex.toString(), ex);
+                        }
+                        fillItemsAsync();
+                    }
+                });
+                ad.setNegativeButton("Нет", null);
+                ad.show();
+                return true;
+            }
+        });
         fillItemsAsync();
     }
 
@@ -79,6 +108,7 @@ public class ShowItemsActivity extends Activity {
                         thingList.clear();
                         thingList.addAll(things);
                     }
+                    countries = dbHelper.getCountriesSorted();
                 } catch (Exception e) {
                     Log.e(APP_NAME, e.toString(), e);
                 }
@@ -129,7 +159,7 @@ public class ShowItemsActivity extends Activity {
             LinearLayout itemLayout = (LinearLayout) vi.findViewById(R.id.item_row);
 
             Thing thing = thingList.get(position);
-            Image image = thing.getImage();
+            Image image = thing.getFirstImage();
 
             ImageView imageView = (ImageView) itemLayout.findViewById(R.id.ir_image);
             try {
@@ -147,17 +177,10 @@ public class ShowItemsActivity extends Activity {
 
             TextView countryManufact = (TextView) itemLayout.findViewById(R.id.ir_country);
             int idCountry = thing.getIdCountry();
-            try {
-
-                String countryName = dbHelper.getCountriesSorted().get(idCountry);
-                countryManufact.setText(StringUtils.defaultString(countryName));
-            } catch (PersistenceException e) {
-                Log.e(APP_NAME, e.toString(), e);
-            }
-
+            String countryName = countries.get(idCountry);
+            countryManufact.setText(StringUtils.defaultString(countryName));
             TextView tvDanger = (TextView) itemLayout.findViewById(R.id.ir_dangerous_for_environment);
             tvDanger.setText(Thing.DANGER_LABELS[thing.getDangerForEnvironment()]);
-
             TextView tvDesctruct = (TextView) itemLayout.findViewById(R.id.ir_destruction_time);
             Integer decompositionTime = thing.getDecompositionTime();
             String decompTimeStr = "";

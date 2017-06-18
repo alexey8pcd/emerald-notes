@@ -27,6 +27,7 @@ import ru.alexey_ovcharov.greenguide.mobile.Mapper;
 import ru.alexey_ovcharov.greenguide.mobile.R;
 import ru.alexey_ovcharov.greenguide.mobile.persist.CategoryOfThing;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
+import ru.alexey_ovcharov.greenguide.mobile.services.PublicationService;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
@@ -42,11 +43,30 @@ public class EncyclopediaActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_encyclopedia);
         dbHelper = DbHelper.getInstance(this);
-        Button bAddReference = (Button) findViewById(R.id.aRefer_bAddRefer);
-        bAddReference.setOnClickListener(new View.OnClickListener() {
+        Button bActions = (Button) findViewById(R.id.aRefer_bActions);
+        bActions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addNewCategory();
+                AlertDialog.Builder ad = new AlertDialog.Builder(EncyclopediaActivity.this);
+                ad.setTitle("Выбор действия");
+                ad.setItems(new String[]{"Добавить раздел", "Опубликовать все", "Обновить все"},
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case 0:
+                                        addNewCategory();
+                                        break;
+                                    case 1:
+                                        publicReferences();
+                                        break;
+                                    case 2:
+                                        updateReferences();
+                                        break;
+                                }
+                            }
+                        });
+                ad.show();
             }
         });
 
@@ -75,6 +95,28 @@ public class EncyclopediaActivity extends Activity {
         getCategoriesAsync();
     }
 
+    private void updateReferences() {
+        Toast.makeText(this, "Процесс обновления справочников запущен", Toast.LENGTH_SHORT).show();
+    }
+
+    private void publicReferences() {
+        AlertDialog.Builder ad = new AlertDialog.Builder(EncyclopediaActivity.this);
+        ad.setTitle("Разрешение на отправку");
+        ad.setMessage("Публикация энциклопедии может потребовать передачи " +
+                "большого объема данных на сервер, продолжить?");
+        ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Toast.makeText(EncyclopediaActivity.this, "Процесс отправки данных запущен",
+                        Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(EncyclopediaActivity.this, PublicationService.class);
+                intent.putExtra(PublicationService.TYPE, PublicationService.TYPE_THINGS);
+                startService(intent);
+            }
+        });
+        ad.setNegativeButton("Нет", null);
+        ad.show();
+    }
+
     private void deleteCategory(final int position) {
         if (allCategoryOfThings != null) {
             AlertDialog.Builder ad = new AlertDialog.Builder(this);
@@ -93,7 +135,6 @@ public class EncyclopediaActivity extends Activity {
             });
             ad.setNegativeButton("Нет", null);
             ad.show();
-//            CategoryOfThing category = allCategoryOfThings.get(position);
         }
     }
 
@@ -106,11 +147,11 @@ public class EncyclopediaActivity extends Activity {
                     allCategoryOfThings = dbHelper.getAllCategoryOfThingsSorted();
                     List<String> categoryNames =
                             Commons.listToStringArray(allCategoryOfThings, new Mapper<CategoryOfThing>() {
-                        @Override
-                        public String map(CategoryOfThing item) {
-                            return item.getCategory();
-                        }
-                    });
+                                @Override
+                                public String map(CategoryOfThing item) {
+                                    return item.getCategory();
+                                }
+                            });
                     synchronized (categoriesList) {
                         categoriesList.clear();
                         categoriesList.addAll(categoryNames);

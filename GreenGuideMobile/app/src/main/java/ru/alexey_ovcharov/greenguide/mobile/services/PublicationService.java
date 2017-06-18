@@ -26,11 +26,15 @@ import java.util.Set;
 import ru.alexey_ovcharov.greenguide.mobile.Commons;
 import ru.alexey_ovcharov.greenguide.mobile.network.DataPackage;
 import ru.alexey_ovcharov.greenguide.mobile.network.HttpClient;
+import ru.alexey_ovcharov.greenguide.mobile.network.InteractStatus;
+import ru.alexey_ovcharov.greenguide.mobile.persist.CategoryOfThing;
 import ru.alexey_ovcharov.greenguide.mobile.persist.DbHelper;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Image;
+import ru.alexey_ovcharov.greenguide.mobile.persist.ImagesGallery;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PersistenceException;
 import ru.alexey_ovcharov.greenguide.mobile.persist.Place;
 import ru.alexey_ovcharov.greenguide.mobile.persist.PlaceType;
+import ru.alexey_ovcharov.greenguide.mobile.persist.Thing;
 
 import static ru.alexey_ovcharov.greenguide.mobile.Commons.APP_NAME;
 
@@ -38,6 +42,9 @@ public class PublicationService extends Service {
 
     public static final String SEND_COMMAND = "/send";
     public static final String IMAGE_GUID = "image-guid";
+    public static final String TYPE = "type";
+    public static final String TYPE_THINGS = "things";
+    public static final String TYPE_PLACES = "places";
     private DbHelper dbHelper;
 
     public PublicationService() {
@@ -56,71 +63,161 @@ public class PublicationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        publicDataAsync();
+        String type = intent.getStringExtra(TYPE);
+        publicDataAsync(type);
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void publicDataAsync() {
+    private void publicDataAsync(final String type) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpClient httpClientPlaces = null;
+                String serverUrl = null;
                 try {
-                    String serverUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
+                    serverUrl = dbHelper.getSettingByName(Commons.SERVER_URL);
+                } catch (Exception e) {
+                    Log.e(APP_NAME, e.toString(), e);
+                }
+                if (serverUrl != null) {
+                    switch (type) {
+                        case TYPE_PLACES:
+                            publicPlaces(serverUrl);
+                            break;
+                        case TYPE_THINGS:
+                            publicThings(serverUrl);
+                            break;
 
-                    String placesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.PLACES_DATA_URL_PART;
-                    httpClientPlaces = new HttpClient(serverUrl + placesUrlParts);
-
-                    ContentResolver contentResolver = getContentResolver();
-
-                    Log.d(APP_NAME, "Начинаю отправку данных на сервер");
-                    List<PlaceType> placesTypes = dbHelper.getPlacesTypesSorted();
-                    List<Place> places = getAllPlaces(placesTypes);
-                    Set<Image> imagesData = createImagesData(places);
-
-                    String textRequest = prepareTextRequest(placesTypes, places);
-                    InteractStatus networkStatus = InteractStatus.CLIENT_ERROR;
-                    if (textRequest != null) {
-                        networkStatus = httpClientPlaces.sendJSON(textRequest);
-                        if (networkStatus == InteractStatus.SUCCESS) {
-                            String imagesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.IMAGES_PART;
-                            try (HttpClient httpClientImages = new HttpClient(serverUrl + imagesUrlParts)) {
-
-                                for (Image image : imagesData) {
-                                    Uri imageUri = Uri.parse(image.getUrl());
-                                    DataPackage dataPackage;
-                                    try (InputStream inputStream = contentResolver.openInputStream(imageUri)) {
-                                        dataPackage = new DataPackage(inputStream);
-                                    }
-                                    dataPackage.addHeader(IMAGE_GUID, image.getGuid());
-                                    networkStatus = httpClientImages.sendBinaryData(dataPackage);
-                                    int count = 0;
-                                    while (networkStatus == InteractStatus.CORRUPT_DATA && count++ < 3) {
-                                        networkStatus = httpClientImages.sendBinaryData(dataPackage);
-                                    }
-                                    if (networkStatus != InteractStatus.SUCCESS) {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
                     }
-                    NotificationsHelper.sendPublicNotify(networkStatus,
-                            getApplicationContext(), "Результат публикации справочников");
-                } catch (Exception ex) {
-                    Log.e(APP_NAME, ex.toString(), ex);
-                } finally {
-                    IOUtils.closeQuietly(httpClientPlaces);
-                    stopSelf();
                 }
 
             }
         }).start();
     }
 
+    private void publicThings(String serverUrl) {
+        Log.d(APP_NAME, "Выполняю публикацию объектов энциклопедии");
+        HttpClient httpClientThings = null;
+        try {
+            String thingsUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.THINGS_DATA_URL_PART;
+            httpClientThings = new HttpClient(serverUrl + thingsUrlParts);
+            ContentResolver contentResolver = getContentResolver();
+            List<CategoryOfThing> thingTypes = dbHelper.getAllCategoryOfThingsSorted();
+            List<Thing> things = getAllThings(thingTypes);
+            Set<Image> imagesData = createImagesData(things);
+            String textRequest = prepareThingsTextRequest(thingTypes, things);
+            InteractStatus networkStatus = InteractStatus.CLIENT_ERROR;
+            if (textRequest != null) {
+                networkStatus = httpClientThings.sendJSON(textRequest);
+                if (networkStatus == InteractStatus.SUCCESS) {
+                    networkStatus = sendImages(serverUrl, contentResolver, imagesData);
+                }
+            }
+            NotificationsHelper.sendPublicNotify(networkStatus,
+                    getApplicationContext(), "Результат публикации справочников");
+        } catch (Exception ex) {
+            Log.e(APP_NAME, ex.toString(), ex);
+        } finally {
+            IOUtils.closeQuietly(httpClientThings);
+            stopSelf();
+        }
+    }
+
+    @NonNull
+    private InteractStatus sendImages(String serverUrl, ContentResolver contentResolver,
+                                      Set<Image> imagesData) throws IOException {
+        String imagesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.IMAGES_PART;
+        InteractStatus networkStatus = InteractStatus.UNKNOWN;
+        try (HttpClient httpClientImages = new HttpClient(serverUrl + imagesUrlParts)) {
+
+            for (Image image : imagesData) {
+                Uri imageUri = Uri.parse(image.getUrl());
+                DataPackage dataPackage;
+                try (InputStream inputStream = contentResolver.openInputStream(imageUri)) {
+                    dataPackage = new DataPackage(inputStream);
+                }
+                dataPackage.addHeader(IMAGE_GUID, image.getGuid());
+                networkStatus = httpClientImages.sendBinaryData(dataPackage);
+                int count = 0;
+                while (networkStatus == InteractStatus.CORRUPT_DATA && count++ < 3) {
+                    networkStatus = httpClientImages.sendBinaryData(dataPackage);
+                }
+                if (networkStatus != InteractStatus.SUCCESS) {
+                    break;
+                }
+            }
+        }
+        return networkStatus;
+    }
+
+    private String prepareThingsTextRequest(List<CategoryOfThing> thingTypes, List<Thing> things) {
+        try {
+            JSONObject requestJSON = new JSONObject();
+            JSONArray thingsCategoriesJsonArray = createCategoriesOfThings(thingTypes);
+            JSONArray thingsJsonArray = createThings(things);
+            requestJSON.put(Thing.TABLE_NAME, thingsJsonArray);
+            requestJSON.put(CategoryOfThing.TABLE_NAME, thingsCategoriesJsonArray);
+            requestJSON.put(DbHelper.DATABASE_ID, dbHelper.getSettingByName(DbHelper.DATABASE_ID));
+            return requestJSON.toString();
+        } catch (Exception e) {
+            Log.e(APP_NAME, e.toString(), e);
+        }
+        return null;
+    }
+
+    @NonNull
+    private JSONArray createThings(List<Thing> things) throws PersistenceException, JSONException {
+        JSONArray jsonArray = new JSONArray();
+        Map<Integer, String> countries = dbHelper.getCountriesSorted();
+        for (Thing thing : things) {
+            JSONObject jsonObject = thing.toJsonObject(countries);
+            jsonArray.put(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    @NonNull
+    private List<Thing> getAllThings(List<CategoryOfThing> thingTypes) throws PersistenceException {
+        List<Thing> thingsRes = new ArrayList<>();
+        for (CategoryOfThing categoryOfThing : thingTypes) {
+            List<Thing> things = dbHelper.getThingsByCategory(categoryOfThing.getIdCategory());
+            for (Thing thing : things) {
+                thingsRes.add(thing);
+            }
+        }
+        return thingsRes;
+    }
+
+    private void publicPlaces(String serverUrl) {
+        Log.d(APP_NAME, "Выполняю публикацию мест");
+        HttpClient httpClientPlaces = null;
+        try {
+            String placesUrlParts = Commons.URL_REFERENCES + SEND_COMMAND + Commons.PLACES_DATA_URL_PART;
+            httpClientPlaces = new HttpClient(serverUrl + placesUrlParts);
+            ContentResolver contentResolver = getContentResolver();
+            List<PlaceType> placesTypes = dbHelper.getPlacesTypesSorted();
+            List<Place> places = getAllPlaces(placesTypes);
+            Set<Image> imagesData = createImagesData(places);
+            String textRequest = preparePlacesTextRequest(placesTypes, places);
+            InteractStatus networkStatus = InteractStatus.CLIENT_ERROR;
+            if (textRequest != null) {
+                networkStatus = httpClientPlaces.sendJSON(textRequest);
+                if (networkStatus == InteractStatus.SUCCESS) {
+                    networkStatus = sendImages(serverUrl, contentResolver, imagesData);
+                }
+            }
+            NotificationsHelper.sendPublicNotify(networkStatus,
+                    getApplicationContext(), "Результат публикации справочников");
+        } catch (Exception ex) {
+            Log.e(APP_NAME, ex.toString(), ex);
+        } finally {
+            IOUtils.closeQuietly(httpClientPlaces);
+            stopSelf();
+        }
+    }
+
 
     @Nullable
-    private String prepareTextRequest(List<PlaceType> placesTypes, List<Place> places) {
+    private String preparePlacesTextRequest(List<PlaceType> placesTypes, List<Place> places) {
         try {
             JSONObject requestJSON = new JSONObject();
             JSONArray placeTypesJsonArray = createPlaceTypes(placesTypes);
@@ -136,15 +233,15 @@ public class PublicationService extends Service {
     }
 
     @NonNull
-    private Set<Image> createImagesData(List<Place> places) throws PersistenceException, IOException, JSONException {
+    private Set<Image> createImagesData(List<? extends ImagesGallery> imagesGalleries)
+            throws PersistenceException, IOException, JSONException {
         Set<Image> images = new HashSet<>();
-        for (Place place : places) {
-            List<Image> imagesIdsInt = place.getImages();
+        for (ImagesGallery imagesGallery : imagesGalleries) {
+            List<Image> imagesIdsInt = imagesGallery.getImagesInfo();
             images.addAll(imagesIdsInt);
         }
         return images;
     }
-
 
     @NonNull
     private JSONArray createPlaces(List<Place> places) throws PersistenceException,
@@ -152,7 +249,7 @@ public class PublicationService extends Service {
         JSONArray jsonArray = new JSONArray();
         Map<Integer, String> countries = dbHelper.getCountriesSorted();
         for (Place place : places) {
-            JSONObject jsonObject = place.toJsonObject(countries, getApplicationContext());
+            JSONObject jsonObject = place.toJsonObject(countries);
             jsonArray.put(jsonObject);
         }
         return jsonArray;
@@ -178,6 +275,17 @@ public class PublicationService extends Service {
         for (PlaceType placeType : placesTypes) {
             JSONObject placeTypeObject = placeType.toJSONObject();
             jsonArray.put(placeTypeObject);
+        }
+        return jsonArray;
+    }
+
+    @NonNull
+    private JSONArray createCategoriesOfThings(List<CategoryOfThing> categoryOfThings) throws JSONException {
+
+        JSONArray jsonArray = new JSONArray();
+        for (CategoryOfThing categoryOfThing : categoryOfThings) {
+            JSONObject categoryOfThingsObject = categoryOfThing.toJSONObject();
+            jsonArray.put(categoryOfThingsObject);
         }
         return jsonArray;
     }

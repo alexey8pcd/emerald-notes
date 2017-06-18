@@ -13,7 +13,6 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -339,7 +338,7 @@ public class DbHelper extends SQLiteOpenHelper {
             if (place.getLongitude() != null) {
                 values.put(Place.LONGITUDE_COLUMN, place.getLongitude().toString());
             }
-            List<Image> imagesIds = place.getImages();
+            List<Image> imagesIds = place.getImagesInfo();
             database.beginTransaction();
             try {
                 long idPlace = database.insert(Place.TABLE_NAME, null, values);
@@ -431,6 +430,32 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    public void deleteThingById(int idThing) throws PersistenceException {
+        Log.d(APP_NAME, "Удаляю объект энциклопедии по ид: " + idThing);
+        SQLiteDatabase database = null;
+        try {
+            database = getWritableDatabase();
+            database.beginTransaction();
+            String[] whereArgs = {String.valueOf(idThing)};
+            int deleteIfpResult = database.delete(Thing.IMAGE_FOR_THING_TABLE_NAME,
+                    Thing.ID_THING_COLUMN + "=?", whereArgs);
+            if (deleteIfpResult > 0) {
+                int deleteResult = database.delete(Thing.TABLE_NAME, Thing.ID_THING_COLUMN + "=?", whereArgs);
+                if (deleteResult > 0) {
+                    database.setTransactionSuccessful();
+                    Log.d(APP_NAME, "Удалено успешно");
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            throw new PersistenceException("Не удалось удалить объект с ид: " + idThing, ex);
+        } finally {
+            if (database != null) {
+                database.endTransaction();
+            }
+        }
+    }
+
     public void updatePlace(@NonNull Place place) throws PersistenceException {
         int idPlace = place.getIdPlace();
         try {
@@ -454,7 +479,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 int update = database.update(Place.TABLE_NAME, upPlaceData, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
                 if (update > 0) {
                     database.delete(Place.IMAGES_FOR_PLACE_TABLE_NAME, Place.ID_PLACE_COLUMN + "=?", placeIdArray);
-                    for (Image image : place.getImages()) {
+                    for (Image image : place.getImagesInfo()) {
                         ContentValues imageCv = new ContentValues(2);
                         imageCv.put(Image.ID_IMAGE_COLUMN, image.getIdImage());
                         imageCv.put(Place.ID_PLACE_COLUMN, idPlace);
@@ -476,22 +501,22 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-    @NonNull
-    public List<Image> getAllImages() throws PersistenceException {
-        List<Image> allImages = new ArrayList<>();
-        try {
-            try (Cursor cursor = getReadableDatabase().rawQuery("select * from " + Image.TABLE_NAME, null)) {
-                if (cursor.moveToFirst()) {
-                    do {
-                        allImages.add(new Image(cursor));
-                    } while (cursor.moveToNext());
-                }
-            }
-        } catch (Exception e) {
-            throw new PersistenceException("Не удалось получить изображения");
-        }
-        return allImages;
-    }
+//    @NonNull
+//    public List<Image> getAllImages() throws PersistenceException {
+//        List<Image> allImages = new ArrayList<>();
+//        try {
+//            try (Cursor cursor = getReadableDatabase().rawQuery("select * from " + Image.TABLE_NAME, null)) {
+//                if (cursor.moveToFirst()) {
+//                    do {
+//                        allImages.add(new Image(cursor));
+//                    } while (cursor.moveToNext());
+//                }
+//            }
+//        } catch (Exception e) {
+//            throw new PersistenceException("Не удалось получить изображения");
+//        }
+//        return allImages;
+//    }
 
     @NonNull
     public LatLng getLastKnownCoordinates() {
@@ -627,7 +652,9 @@ public class DbHelper extends SQLiteOpenHelper {
                                 " on ift." + Image.ID_IMAGE_COLUMN + "=" + "i." + Image.ID_IMAGE_COLUMN
                                 + " where " + Thing.ID_THING_COLUMN + "=" + thing.getIdThing(), null)) {
                             if (cursorImg.moveToFirst()) {
-                                thing.setImage(new Image(cursorImg));
+                                do {
+                                    thing.addImage(new Image(cursorImg));
+                                } while (cursor.moveToNext());
                             }
                         }
                         result.add(thing);
@@ -667,6 +694,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void addThing(@NonNull Thing thing) throws PersistenceException {
+        Log.d(APP_NAME, "Добавляю объект энциклопедии: " + thing);
         SQLiteDatabase database = null;
         try {
             database = getWritableDatabase();
@@ -683,7 +711,7 @@ public class DbHelper extends SQLiteOpenHelper {
             if (insert != ROW_NOT_EXIST) {
                 ContentValues cv1 = new ContentValues();
                 cv1.put(Thing.ID_THING_COLUMN, insert);
-                cv1.put(Image.ID_IMAGE_COLUMN, thing.getImage().getIdImage());
+                cv1.put(Image.ID_IMAGE_COLUMN, thing.getFirstImage().getIdImage());
                 long insertImg = database.insert(Thing.IMAGE_FOR_THING_TABLE_NAME, null, cv1);
                 if (insertImg != ROW_NOT_EXIST) {
                     database.setTransactionSuccessful();
@@ -702,5 +730,21 @@ public class DbHelper extends SQLiteOpenHelper {
                 database.endTransaction();
             }
         }
+    }
+
+    public void addNote(Note note) throws PersistenceException {
+
+    }
+
+    public void addNoteType(NoteType noteType) throws PersistenceException {
+
+    }
+
+    public List<NoteType> getNoteTypesSorted() throws PersistenceException {
+        return Collections.EMPTY_LIST;
+    }
+
+    public List<Note> getNotesByType(int idNoteType) throws PersistenceException {
+        return Collections.EMPTY_LIST;
     }
 }

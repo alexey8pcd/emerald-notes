@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -39,7 +38,7 @@ import static ru.alexey_ovcharov.greenguide.mobile.persist.Entity.GUID_COLUMN_NA
  * Created by Алексей on 23.04.2017.
  */
 @Entity
-public class Place {
+public class Place extends ImagesGallery {
 
     public static final String ID_PLACE_COLUMN = "id_place";
     public static final String DESCRIPTION_COLUMN = "description";
@@ -82,7 +81,6 @@ public class Place {
     private String dateCreate;
     private int idPlaceType;
     private Integer idCountry;
-    private List<Image> imagesInfo = new ArrayList<>(1);
     private String guid;
 
     public Place(JSONObject placeJson) throws JSONException, ParseException {
@@ -99,14 +97,6 @@ public class Place {
         if (placeJson.has(Place.LONGITUDE_COLUMN)) {
             longitude = new BigDecimal(placeJson.getDouble(Place.LONGITUDE_COLUMN));
         }
-    }
-
-    public List<Image> getImages() {
-        return imagesInfo;
-    }
-
-    public void addImageId(Image image) {
-        imagesInfo.add(image);
     }
 
     public Place() {
@@ -229,12 +219,8 @@ public class Place {
         this.idPlaceType = idPlaceType;
     }
 
-    public void addImage(Image image) {
-        this.imagesInfo.add(image);
-    }
 
-    public JSONObject toJsonObject(Map<Integer, String> countries, Context context)
-            throws JSONException, FileNotFoundException {
+    public JSONObject toJsonObject(Map<Integer, String> countries) throws JSONException {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(DESCRIPTION_COLUMN, description);
@@ -249,35 +235,8 @@ public class Place {
         for (Image image : imagesInfo) {
             imagesJsonArray.put(image.getGuid());
         }
-        jsonObject.put("images", imagesJsonArray);
+        jsonObject.put(Image.TABLE_NAME, imagesJsonArray);
         return jsonObject;
-    }
-
-    @NonNull
-    public List<Image.ImageDataWrapper<Bitmap>> getImagesBitmaps(ContentResolver contentResolver) {
-        try {
-            List<Image.ImageDataWrapper<Bitmap>> imageDataWrappers = new ArrayList<>(imagesInfo.size());
-            for (Image image : imagesInfo) {
-                try {
-                    if (image.getUrl() != null) {
-                        Uri imageUrl = Uri.parse(image.getUrl());
-                        InputStream in = contentResolver.openInputStream(imageUrl);
-                        Bitmap bitmap = BitmapFactory.decodeStream(in, null, null);
-                        imageDataWrappers.add(new Image.ImageDataWrapper(image.getIdImage(), bitmap));
-                    }
-                } catch (Exception e) {
-                    Log.e(Commons.APP_NAME, e.toString(), e);
-                }
-            }
-            return imageDataWrappers;
-        } catch (Exception e) {
-            Log.e(Commons.APP_NAME, e.toString(), e);
-        }
-        return Collections.EMPTY_LIST;
-    }
-
-    public void addImages(Collection<Image> images) {
-        imagesInfo.addAll(images);
     }
 
     @Nullable
